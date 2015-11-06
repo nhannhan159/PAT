@@ -1,0 +1,665 @@
+<WSN_PN>
+	<Declaration>#import "PAT.Lib.20150319";
+  
+#define NUM_PLACE {0};
+
+// replace with packet initialize
+#define PACKET_NO 5;
+
+// replace max buffer
+#define BUFFER_MAX_SIZE_OF_SENSOR_DEFAULT {1};
+#define BUFFER_MAX_SIZE_OF_CHANNEL_DEFAULT {2};
+
+var&lt;Network&gt; net = new Network(NUM_PLACE, PACKET_NO, BUFFER_MAX_SIZE_OF_SENSOR_DEFAULT, BUFFER_MAX_SIZE_OF_CHANNEL_DEFAULT);
+var Init = 0;
+
+System = {4}();
+
+#define reaches_dest net.isDestinationOk({3}) == true;
+
+// replace x with sensor id is fulled
+// #define check_congestion1 net.isFullSensor(x) == true;
+
+#assert System reaches reaches_dest;
+
+// #assert System reaches check_congestion1;
+
+// replace x with sensor id is fulled
+// #assert System |= []&lt;&gt; Congestionx;
+
+// replace x_x with channel id fulled
+// #assert System |= []&lt;&gt; Packetlostx_x;
+
+#assert System deadlockfree;
+  </Declaration>
+
+
+	<Sensors>
+		<!--
+			Name: same as the SensorType (and SensorMode)
+		-->
+
+		<Model Name="CollapsedSensor" Parameter="" Zoom="1" PlaceCounter="1" TransitionCounter="0" In="Sensor" Out="Sensor">
+			<Places>
+				<Place Name="Sensor" NumOfToken="1" Capacity="0">
+					<Position X="0.13" Y="0.82" Width="0.2" />
+					<Label>
+						<Position X="0.03" Y="1.02" Width="0.4" />
+					</Label>
+					<Guard></Guard>
+          <GuardExpSource>Init == 0 || net.getSensorSBS({0}) > 0</GuardExpSource>
+          <ProgExpSource>if(Init == 0 || net.getSensorSBS({0}) > 0){{
+  if (Init == 0)
+  {{
+    net = new Network(NUM_PLACE, PACKET_NO, BUFFER_MAX_SIZE_OF_SENSOR_DEFAULT, BUFFER_MAX_SIZE_OF_CHANNEL_DEFAULT);
+    
+    var cc = {2};
+    net.initRoute({0}, {1}, cc);
+    // net.setSensorBMS(1, 1);
+    
+    // init params
+    {3}
+    
+    Init = 1;
+  }}
+
+  var c = {2};
+  net.fastSendToChannels({0}, c);
+}}
+
+          </ProgExpSource>
+          <ProgExpSink>if (!net.isFullSensor({0}) &amp;&amp; net.getSensorPBS({0}) > 0) {{
+  var c = {1};
+  net.processInSensor({0}, c);
+}}
+          </ProgExpSink>
+          <ProgExpPre></ProgExpPre>
+          <GuardExpPost>net.getSensorPBS({0}) > 0 || net.getSensorSBS({0}) > 0 || net.getDroppedState({0})</GuardExpPost>
+          <ProgExpPost>if (!net.getDroppedState({0}) &amp;&amp; !net.isFullSensor({0}) &amp;&amp; net.getSensorPBS({0}) > 0)
+{{
+  var c = {1};
+  net.processInSensor({0}, c);
+}}
+else if (net.getDroppedState({0})) 
+{{
+  net.setDroppedForSensor({0});
+	net.setDroppedState({0}, false);
+}}
+
+if (net.getSensorSBS({0}) > 0)
+{{
+  var c = {1};
+  net.fastSendToChannels({0}, c);
+}}
+
+{2}
+
+       </ProgExpPost>
+				</Place>
+			</Places>
+			<Transitions>
+			</Transitions>
+			<Arcs>
+			</Arcs>
+		</Model>
+
+		<Model Name="Incongestable" Parameter="" Zoom="1" PlaceCounter="2" TransitionCounter="2" Out="Output">
+			<Places>
+				<Place Name="Main" NumOfToken="1" Capacity="0">
+					<Position X="1.73" Y="0.22" Width="0.2" />
+					<Label>
+						<Position X="1.63" Y="0.02" Width="0.4" />
+					</Label>
+					<Guard></Guard>
+				</Place>
+				<Place Name="Input" NumOfToken="0" Capacity="0">
+					<Position X="0.13" Y="0.82" Width="0.2" />
+					<Label>
+						<Position X="0.03" Y="1.02" Width="0.4" />
+					</Label>
+					<Guard>
+					</Guard>
+				</Place>
+        <Place Name="Output" NumOfToken="0" Capacity="0">
+          <Position X="3.8" Y="0.82" Width="0.2" />
+          <Label>
+            <Position X="3.7" Y="1.02" Width="0.4" />
+          </Label>
+          <Guard>
+          </Guard>
+        </Place>
+			</Places>
+			<Transitions>
+				<Transition Name="Receive">
+					<Position X="0.93" Y="0.82" Width="0.2" />
+					<Label>
+						<Position X="0.77" Y="1.11" Width="0.6" />
+					</Label>
+					<Guard>
+					</Guard>
+					<Program>if (!net.isFullSensor({0}) &amp;&amp; net.getSensorPBS({0}) > 0) {{
+  var c = {1};
+  net.processInSensor({0}, c);
+}}
+          </Program>
+				</Transition>
+				<Transition Name="Send">
+					<Position X="2.7" Y="0.8" Width="0.2" />
+					<Label>
+						<Position X="2.6" Y="1" Width="0.4" />
+					</Label>
+					<Guard></Guard>
+					<Program>if (net.getSensorSBS({0}) > 0) {{
+  var c = {1};
+  net.sendToChannels({0}, c);
+}}
+
+Output{0} = 1;
+
+          </Program>
+				</Transition>
+			</Transitions>
+			<Arcs>
+				<Arc From="Input" To="Receive" Weight="1">
+					<Label>
+						<Position X="0.53" Y="0.72" Width="0.25" />
+					</Label>
+				</Arc>
+				<Arc From="Receive" To="Main" Weight="1">
+					<Label>
+						<Position X="1.43" Y="1.02" Width="0.25" />
+					</Label>
+				</Arc>
+				<Arc From="Main" To="Send" Weight="1">
+					<Label>
+						<Position X="2.28" Y="0.43" Width="0.25" />
+					</Label>
+				</Arc>
+        <Arc From="Send" To="Output" Weight="1">
+          <Label>
+            <Position X="3.7" Y="0.72" Width="0.25" />
+          </Label>
+        </Arc>
+			</Arcs>
+		</Model>
+
+		<Model Name="Congestable" Parameter="" Zoom="1" PlaceCounter="3" TransitionCounter="3" Out="Output">
+			<Places>
+				<Place Name="Main" NumOfToken="1" Capacity="0">
+					<Position X="2.09" Y="0.22" Width="0.2" />
+					<Label>
+						<Position X="2.05" Y="0.04" Width="0.4" />
+					</Label>
+					<Guard>
+					</Guard>
+				</Place>
+				<Place Name="Input" NumOfToken="0" Capacity="0">
+					<Position X="0.33" Y="0.69" Width="0.2" />
+					<Label>
+						<Position X="0.23" Y="0.49" Width="0.4" />
+					</Label>
+					<Guard>
+					</Guard>
+				</Place>
+        <Place Name="Output" NumOfToken="0" Capacity="0">
+          <Position X="3.8" Y="0.82" Width="0.2" />
+          <Label>
+            <Position X="3.7" Y="1.02" Width="0.4" />
+          </Label>
+          <Guard>
+          </Guard>
+        </Place>
+			</Places>
+			<Transitions>
+				<Transition Name="Receive">
+					<Position X="1.03" Y="0.69" Width="0.2" />
+					<Label>
+						<Position X="0.93" Y="0.89" Width="0.6" />
+					</Label>
+					<Guard>
+					</Guard>
+          <Program>if (!net.isFullSensor({0}) &amp;&amp; net.getSensorPBS({0}) > 0) {{
+  var c = {1};
+  net.processInSensor({0});
+}}
+          </Program>
+				</Transition>
+				<Transition Name="Send">
+					<Position X="2.93" Y="0.69" Width="0.2" />
+					<Label>
+						<Position X="2.83" Y="0.89" Width="0.4" />
+					</Label>
+					<Guard></Guard>
+          <Program>if (net.getSensorSBS({0}) > 0) {{
+  var c = {1};
+  net.sendToChannels({0}, c);
+}}
+
+Output{0} = 1;
+
+          </Program>
+				</Transition>
+				<Transition Name="Congestion">
+					<Position X="1" Y="1.4" Width="0.2" />
+					<Label>
+						<Position X="0.7" Y="1.6" Width="0.8" />
+					</Label>
+					<Guard>net.isFullSensor({0})</Guard>
+					<Program>
+					</Program>
+				</Transition>
+			</Transitions>
+			<Arcs>
+				<Arc From="Receive" To="Main" Weight="1">
+					<Label>
+						<Position X="1.63" Y="0.79" Width="0.25" />
+					</Label>
+				</Arc>
+				<Arc From="Input" To="Congestion" Weight="1">
+					<Label>
+						<Position X="0.6" Y="1.1" Width="0.25" />
+					</Label>
+				</Arc>
+				<Arc From="Input" To="Receive" Weight="1">
+					<Label>
+						<Position X="0.73" Y="0.59" Width="0.25" />
+					</Label>
+				</Arc>
+				<Arc From="Main" To="Send" Weight="1">
+					<Label>
+						<Position X="2.62" Y="0.34" Width="0.25" />
+					</Label>
+				</Arc>
+				<Arc From="Congestion" To="Input" Weight="1">
+					<Label>
+						<Position X="0.9" Y="1.1" Width="0.25" />
+					</Label>
+				</Arc>
+        <Arc From="Send" To="Output" Weight="1">
+          <Label>
+            <Position X="3.7" Y="0.72" Width="0.25" />
+          </Label>
+        </Arc>
+			</Arcs>
+		</Model>
+
+		<Model Name="Dropped" Parameter="" Zoom="1" PlaceCounter="3" TransitionCounter="4" Out="Send">
+			<Places>
+				<Place Name="Input" NumOfToken="0" Capacity="0">
+					<Position X="0.95" Y="0.29" Width="0.2" />
+					<Label>
+						<Position X="0.92" Y="0.48" Width="0.4" />
+					</Label>
+					<Guard>
+					</Guard>
+				</Place>
+				<Place Name="Main" NumOfToken="1" Capacity="0">
+					<Position X="2.69" Y="0.27" Width="0.2" />
+					<Label>
+						<Position X="2.65" Y="0.09" Width="0.4" />
+					</Label>
+					<Guard>
+					</Guard>
+				</Place>
+				<Place Name="Congested" NumOfToken="0" Capacity="0">
+					<Position X="1.32" Y="1.38" Width="0.2" />
+					<Label>
+						<Position X="1.02" Y="1.58" Width="0.7" />
+					</Label>
+					<Guard>
+					</Guard>
+				</Place>
+			</Places>
+			<Transitions>
+				<Transition Name="Send">
+					<Position X="3.55" Y="0.69" Width="0.2" />
+					<Label>
+						<Position X="3.42" Y="0.88" Width="0.4" />
+					</Label>
+					<Guard>net.getSensorSBS({0}) > 0</Guard>
+          <Program>
+var c = {1};
+net.sendToChannels({0}, c);
+{2}
+          </Program>
+				</Transition>
+				<Transition Name="Congestion">
+					<Position X="0.32" Y="0.98" Width="0.2" />
+					<Label>
+						<Position X="0.02" Y="1.18" Width="0.8" />
+					</Label>
+          <Guard>net.getDroppedState({0})</Guard>
+					<Program>Congested{0} = 1;</Program>
+				</Transition>
+				<Transition Name="Droppacket">
+					<Position X="2.62" Y="1.38" Width="0.2" />
+					<Label>
+						<Position X="2.32" Y="1.58" Width="0.8" />
+					</Label>
+          <Guard></Guard>
+					<Program>net.setDroppedForSensor({0});
+net.setDroppedState({0}, false);</Program>
+				</Transition>
+				<Transition Name="Receive">
+					<Position X="1.65" Y="0.69" Width="0.2" />
+					<Label>
+						<Position X="1.45" Y="0.89" Width="0.6" />
+					</Label>
+					<Guard>
+					</Guard>
+          <Program>if (!net.getDroppedState({0}) &amp;&amp; !net.isFullSensor({0}) &amp;&amp; net.getSensorPBS({0}) > 0) {{
+  var c = {1};
+  net.processInSensor({0}, c);
+}}
+          </Program>
+				</Transition>
+			</Transitions>
+			<Arcs>
+				<Arc From="Receive" To="Main" Weight="1">
+					<Nail>
+						<Position X="2.55" Y="0.79" Width="0.1" />
+					</Nail>
+					<Label>
+						<Position X="2.22" Y="0.68" Width="0.25" />
+					</Label>
+				</Arc>
+				<Arc From="Send" To="Main" Weight="1">
+					<Nail>
+						<Position X="2.85" Y="0.79" Width="0.1" />
+					</Nail>
+					<Label>
+						<Position X="3.15" Y="0.79" Width="0.25" />
+					</Label>
+				</Arc>
+				<Arc From="Congestion" To="Congested" Weight="1">
+					<Label>
+						<Position X="0.92" Y="1.08" Width="0.25" />
+					</Label>
+				</Arc>
+				<Arc From="Input" To="Congestion" Weight="1">
+					<Label>
+						<Position X="0.62" Y="0.48" Width="0.25" />
+					</Label>
+				</Arc>
+				<Arc From="Input" To="Receive" Weight="1">
+					<Label>
+						<Position X="1.4" Y="0.4" Width="0.25" />
+					</Label>
+				</Arc>
+				<Arc From="Main" To="Receive" Weight="1">
+					<Label>
+						<Position X="2.25" Y="0.39" Width="0.25" />
+					</Label>
+				</Arc>
+				<Arc From="Main" To="Send" Weight="1">
+					<Label>
+						<Position X="3.22" Y="0.39" Width="0.25" />
+					</Label>
+				</Arc>
+				<Arc From="Main" To="Droppacket" Weight="1">
+					<Label>
+						<Position X="2.62" Y="0.98" Width="0.25" />
+					</Label>
+				</Arc>
+				<Arc From="Droppacket" To="Main" Weight="1">
+					<Label>
+						<Position X="2.82" Y="0.98" Width="0.25" />
+					</Label>
+				</Arc>
+				<Arc From="Congested" To="Droppacket" Weight="1">
+					<Label>
+						<Position X="2.02" Y="1.28" Width="0.25" />
+					</Label>
+				</Arc>
+			</Arcs>
+		</Model>
+
+		<Model Name="Source" Parameter="" Zoom="1" PlaceCounter="1" TransitionCounter="2" Out="Output">
+			<Places>
+				<Place Name="Main" NumOfToken="1" Capacity="0">
+					<Position X="0.14" Y="0.25" Width="0.2" />
+					<Label>
+						<Position X="0.04" Y="0.05" Width="0.4" />
+					</Label>
+					<Guard>
+					</Guard>
+				</Place>
+        <Place Name="Output" NumOfToken="0" Capacity="0">
+          <Position X="2.24" Y="0.25" Width="0.2" />
+          <Label>
+            <Position X="2.04" Y="0.45" Width="0.4" />
+          </Label>
+          <Guard>
+          </Guard>
+        </Place>
+			</Places>
+			<Transitions>
+				<Transition Name="Send">
+					<Position X="1.14" Y="0.25" Width="0.2" />
+					<Label>
+						<Position X="1.04" Y="0.45" Width="0.4" />
+					</Label>
+					<Guard>
+					</Guard>
+					<Program>if(Init == 0 || net.getSensorSBS({0}) > 0){{
+  if (Init == 0)
+  {{
+    net = new Network(NUM_PLACE, PACKET_NO, BUFFER_MAX_SIZE_OF_SENSOR_DEFAULT, BUFFER_MAX_SIZE_OF_CHANNEL_DEFAULT);
+    
+    var cc = {2};
+    net.initRoute({0}, {1}, cc);
+    // net.setSensorBMS(1, 1);
+  
+  
+    // init params
+    {3}
+  
+    Init = 1;
+  }}
+
+  var c = {2};
+  net.sendToChannels({0}, c);
+}}
+
+Output{0} = 1;
+          </Program>
+				</Transition>
+			</Transitions>
+			<Arcs>
+				<Arc From="Main" To="Send" Weight="1">
+					<Label>
+						<Position X="0.7" Y="0.2" Width="0.25" />
+					</Label>
+				</Arc>
+        <Arc From="Send" To="Output" Weight="1">
+          <Label>
+            <Position X="1.74" Y="0.35" Width="0.25" />
+          </Label>
+        </Arc>
+			</Arcs>
+		</Model>
+
+		<Model Name="Sink" Parameter="" Zoom="1" PlaceCounter="1" TransitionCounter="2">
+			<Places>
+				<Place Name="Input" NumOfToken="0" Capacity="0">
+					<Position X="0.13" Y="0.11" Width="0.2" />
+					<Label>
+						<Position X="0.03" Y="0.31" Width="0.4" />
+					</Label>
+					<Guard>
+					</Guard>
+				</Place>
+			</Places>
+			<Transitions>
+				<Transition Name="Receive">
+					<Position X="0.93" Y="0.11" Width="0.2" />
+					<Label>
+						<Position X="0.73" Y="0.31" Width="0.6" />
+					</Label>
+					<Guard>
+					</Guard>
+					<Program>if (!net.isFullSensor({0}) &amp;&amp; net.getSensorPBS({0}) > 0) {{
+  var c = {1};
+  net.processInSensor({0}, c);
+}}
+          </Program>
+				</Transition>
+			</Transitions>
+			<Arcs>
+				<Arc From="Input" To="Receive" Weight="1">
+					<Label>
+						<Position X="0.58" Y="0.21" Width="0.25" />
+					</Label>
+				</Arc>
+			</Arcs>
+		</Model>
+
+	</Sensors>
+
+	<Channels>
+		<!--
+			Name: combination of ChannelType_ChannelMode
+		-->
+
+		<Model Name="CollapsedChannel" Parameter="" Zoom="1" PlaceCounter="1" TransitionCounter="1" In="Channel" Out="Channel">
+			<Places>
+			</Places>
+			<Transitions>
+				<Transition Name="Channel">
+					<Position X="1.13" Y="0.23" Width="0.2" />
+					<Label>
+						<Position X="1.03" Y="0.03" Width="0.4" />
+					</Label>
+					<Guard></Guard>
+					<Program></Program>
+          <SubProgram>if (!net.isFullChannel({0}, {1}) &amp;&amp; net.getChannelBS({0}, {1}) > 0)
+  net.sendToSensor({0}, {1});
+{2}{1} = 1;
+          </SubProgram>        
+				</Transition>
+			</Transitions>
+			<Arcs>
+			</Arcs>
+		</Model>
+
+		<Model Name="Unicast_Reliable" Parameter="" Zoom="1" PlaceCounter="1" TransitionCounter="2" In="Receive" Out="Send">
+			<Places>
+				<Place Name="Main" NumOfToken="1" Capacity="0">
+					<Position X="1.13" Y="1.13" Width="0.2" />
+					<Label>
+						<Position X="1.03" Y="1.33" Width="0.4" />
+					</Label>
+					<Guard>
+					</Guard>
+				</Place>
+			</Places>
+			<Transitions>
+				<Transition Name="Receive">
+					<Position X="0.23" Y="1.13" Width="0.2" />
+					<Label>
+						<Position X="0.03" Y="1.33" Width="0.6" />
+					</Label>
+          <Guard></Guard>
+          <SubGuard>(!net.isFullChannel({0}, {1}) &amp;&amp; net.getChannelBS({0}, {1}) > 0)</SubGuard>
+					<Program>
+					</Program>
+				</Transition>
+				<Transition Name="Send">
+					<Position X="2.03" Y="1.13" Width="0.2" />
+					<Label>
+						<Position X="2.03" Y="1.13" Width="0.4" />
+					</Label>
+					<Guard></Guard>
+          <Program></Program>
+          
+          <SubProgram>if (!net.isFullChannel({0}, {1}) &amp;&amp; net.getChannelBS({0}, {1}) > 0)
+  net.sendToSensor({0}, {1});
+if ({2}{1} > {3})
+  {2}{1} = 1;
+          </SubProgram>
+				</Transition>
+			</Transitions>
+			<Arcs>
+				<Arc From="Receive" To="Main" Weight="1">
+					<Label>
+						<Position X="0.73" Y="1.03" Width="0.25" />
+					</Label>
+				</Arc>
+				<Arc From="Main" To="Send" Weight="1">
+					<Label>
+						<Position X="1.83" Y="1.03" Width="0.25" />
+					</Label>
+				</Arc>
+			</Arcs>
+		</Model>
+
+		<Model Name="Unicast_Unreliable" Parameter="" Zoom="1" PlaceCounter="5" TransitionCounter="4" In="Receive" Out="Send">
+			<Places>
+				<Place Name="Main" NumOfToken="1" Capacity="0">
+					<Position X="1.22" Y="1.29" Width="0.2" />
+					<Label>
+						<Position X="1.12" Y="1.49" Width="0.4" />
+					</Label>
+					<Guard>
+					</Guard>
+				</Place>
+			</Places>
+			<Transitions>
+				<Transition Name="Packetlost">
+					<Position X="0.4" Y="1.31" Width="0.2" />
+					<Label>
+						<Position X="0.1" Y="1.51" Width="0.9" />
+					</Label>
+					<Guard>net.isFullChannel({0}, {1})</Guard>
+					<Program>
+					</Program>
+				</Transition>
+				<Transition Name="Receive">
+					<Position X="1.22" Y="0.31" Width="0.2" />
+					<Label>
+						<Position X="1.1" Y="0.08" Width="0.6" />
+					</Label>
+					<Guard></Guard>
+          <SubGuard>(!net.isFullChannel({0}, {1}) &amp;&amp; net.getChannelBS({0}, {1}) > 0)</SubGuard>
+					<Program>Main{0}=1;</Program>
+				</Transition>
+				<Transition Name="Send">
+					<Position X="2.12" Y="1.29" Width="0.2" />
+					<Label>
+						<Position X="2.02" Y="1.49" Width="0.4" />
+					</Label>
+					<Guard></Guard>
+          <Program></Program>
+					<SubProgram>if (!net.isFullChannel({0}, {1}) &amp;&amp; net.getChannelBS({0}, {1}) > 0)
+  net.sendToSensor({0}, {1});
+  
+if ({2}{1} > {3})
+  {2}{1} = 1;
+          </SubProgram>
+				</Transition>
+			</Transitions>
+			<Arcs>
+				<Arc From="Receive" To="Main" Weight="1">
+					<Label>
+						<Position X="1.32" Y="0.79" Width="0.25" />
+					</Label>
+				</Arc>
+				<Arc From="Main" To="Send" Weight="1">
+					<Label>
+						<Position X="1.72" Y="1.19" Width="0.25" />
+					</Label>
+				</Arc>
+        <Arc From="Main" To="Packetlost" Weight="1">
+          <Label>
+            <Position X="1.72" Y="1.29" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Packetlost" To="Main" Weight="1">
+          <Label>
+            <Position X="1.72" Y="1.29" Width="0.25" />
+          </Label>
+        </Arc>
+			</Arcs>
+		</Model>
+	</Channels>
+</WSN_PN>

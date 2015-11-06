@@ -1,0 +1,437 @@
+<WSN_PN>
+  <Declaration>#import "PAT.Lib.Utils";
+
+{0}
+
+System = Network_1();
+
+// Sensor check
+{1}
+
+// Channel check
+{2}
+
+#assert System deadlockfree;
+  </Declaration>
+
+
+  <Sensors>
+    <!--
+			Name: same as the SensorType (and SensorMode)
+		-->
+
+    <Model Name="CollapsedIntermediate" Parameter="" Zoom="1" PlaceCounter="1" TransitionCounter="0" In="Sensor" Out="Sensor">
+      <Places>
+        <Place Name="Sensor" NumOfToken="0" Capacity="0">
+          <Position X="1.1" Y="0.5" Width="0.2" />
+          <Label>
+            <Position X="1" Y="0.75" Width="0.5" />
+          </Label>
+          <Guard></Guard>
+        </Place>
+      </Places>
+      <Transitions>
+      </Transitions>
+      <Arcs>
+      </Arcs>
+    </Model>
+
+    <Model Name="CollapsedSource" Parameter="" Zoom="1" PlaceCounter="1" TransitionCounter="0" In="Sensor" Out="Sensor">
+      <Places>
+        <Place Name="Sensor" NumOfToken="1" Capacity="0">
+          <Position X="1.1" Y="0.5" Width="0.2" />
+          <Label>
+            <Position X="1" Y="0.75" Width="0.5" />
+          </Label>
+          <Guard></Guard>
+        </Place>
+      </Places>
+      <Transitions>
+      </Transitions>
+      <Arcs>
+      </Arcs>
+    </Model>
+
+    <Model Name="CollapsedSink" Parameter="" Zoom="1" PlaceCounter="1" TransitionCounter="0" In="Sensor" Out="Sensor">
+      <Places>
+        <Place Name="Sensor" NumOfToken="1" Capacity="0">
+          <Position X="1.1" Y="0.5" Width="0.2" />
+          <Label>
+            <Position X="1" Y="0.75" Width="0.5" />
+          </Label>
+          <Guard></Guard>
+        </Place>
+      </Places>
+      <Transitions>
+        <Transition Name="Receive">
+          <Position X="0.93" Y="0.82" Width="0.2" />
+          <Label>
+            <Position X="0.77" Y="1.11" Width="0.6" />
+          </Label>
+          <Guard></Guard>
+          <Program></Program>
+        </Transition>
+      </Transitions>
+      <Arcs>
+        <Arc From="Sensor" To="Receive" Weight="1">
+          <Label>
+            <Position X="0.53" Y="0.72" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Receive" To="Sensor" Weight="1">
+          <Label>
+            <Position X="0.53" Y="0.72" Width="0.25" />
+          </Label>
+        </Arc>
+      </Arcs>
+    </Model>
+
+    <Model Name="Intermediate" Parameter="" Zoom="1" PlaceCounter="3" TransitionCounter="3" Out="Output">
+      <Places>
+        <Place Name="Input" NumOfToken="0" Capacity="0" id="">
+          <Position X="0.4" Y="0.7" Width="0.2" />
+          <Label>
+            <Position X="0.3" Y="0.5" Width="0.4" />
+          </Label>
+          <Guard>
+          </Guard>
+        </Place>
+        <Place Name="Output" NumOfToken="0" Capacity="0" id="">
+          <Position X="3.7" Y="0.7" Width="0.2" />
+          <Label>
+            <Position X="3.6" Y="0.95" Width="0.5" />
+          </Label>
+          <Guard>
+          </Guard>
+        </Place>
+        <Place Name="Main" NumOfToken="0" Capacity="0" id="">
+          <Position X="2" Y="0.2" Width="0.2" />
+          <Label>
+            <Position X="1.9" Y="0.45" Width="0.4" />
+          </Label>
+          <Guard>
+          </Guard>
+        </Place>
+      </Places>
+      <Transitions>
+        <Transition Name="Congestion" id="">
+          <Position X="1.1" Y="1.4" Width="0.2" />
+          <Label>
+            <Position X="0.8" Y="1.7" Width="0.8" />
+          </Label>
+          <Guard></Guard>
+          <Program>
+          </Program>
+        </Transition>
+        <Transition Name="Send" id="">
+          <Position X="2.8" Y="0.7" Width="0.2" />
+          <Label>
+            <Position X="2.7" Y="0.95" Width="0.4" />
+          </Label>
+          <Guard>
+          </Guard>
+          <Program></Program>
+        </Transition>
+        <Transition Name="Receive" id="">
+          <Position X="1.2" Y="0.7" Width="0.2" />
+          <Label>
+            <Position X="1.1" Y="0.95" Width="0.6" />
+          </Label>
+          <Guard></Guard>
+          <Program></Program>
+        </Transition>
+      </Transitions>
+      <Arcs>
+        <Arc From="Receive" To="Main" Weight="1">
+          <Label>
+            <Position X="1.6" Y="0.4" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Input" To="Congestion" Weight="1">
+          <Label>
+            <Position X="0.7" Y="1" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Input" To="Receive" Weight="1">
+          <Label>
+            <Position X="0.8" Y="0.7" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Main" To="Send" Weight="1">
+          <Label>
+            <Position X="2.5" Y="0.4" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Send" To="Output" Weight="1">
+          <Label>
+            <Position X="3.3" Y="0.7" Width="0.25" />
+          </Label>
+        </Arc>
+      </Arcs>
+    </Model>
+
+    <Model Name="Source" Parameter="" Zoom="1" PlaceCounter="1" TransitionCounter="2" Out="Output">
+      <Places>
+        <Place Name="Output" NumOfToken="0" Capacity="0" id="">
+          <Position X="2.9" Y="0.3" Width="0.2" />
+          <Label>
+            <Position X="2.8" Y="0.55" Width="0.5" />
+          </Label>
+          <Guard>
+          </Guard>
+        </Place>
+        <Place Name="Main" NumOfToken="1" Capacity="0" id="">
+          <Position X="0.8" Y="0.3" Width="0.2" />
+          <Label>
+            <Position X="0.7" Y="0.55" Width="0.4" />
+          </Label>
+          <Guard>
+          </Guard>
+        </Place>
+      </Places>
+      <Transitions>
+        <Transition Name="Send" id="">
+          <Position X="1.8" Y="0.3" Width="0.2" />
+          <Label>
+            <Position X="1.7" Y="0.55" Width="0.4" />
+          </Label>
+          <Guard></Guard>
+          <Program></Program>
+        </Transition>
+      </Transitions>
+      <Arcs>
+        <Arc From="Main" To="Send" Weight="1">
+          <Label>
+            <Position X="1.3" Y="0.2" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Send" To="Main" Weight="1">
+          <Label>
+            <Position X="1.3" Y="0.2" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Send" To="Output" Weight="1">
+          <Label>
+            <Position X="2.4" Y="0.2" Width="0.25" />
+          </Label>
+        </Arc>
+      </Arcs>
+    </Model>
+
+    <Model Name="Sink" Parameter="" Zoom="1" PlaceCounter="1" TransitionCounter="2">
+      <Places>
+        <Place Name="Input" NumOfToken="1" Capacity="0" id="">
+          <Position X="1.1" Y="0.3" Width="0.2" />
+          <Label>
+            <Position X="1" Y="0.55" Width="0.4" />
+          </Label>
+          <Guard>
+          </Guard>
+        </Place>
+      </Places>
+      <Transitions>
+        <Transition Name="Receive" id="">
+          <Position X="2.2" Y="0.3" Width="0.2" />
+          <Label>
+            <Position X="2.1" Y="0.55" Width="0.6" />
+          </Label>
+          <Guard></Guard>
+          <Program></Program>
+        </Transition>
+      </Transitions>
+      <Arcs>
+        <Arc From="Input" To="Receive" Weight="1">
+          <Label>
+            <Position X="1.7" Y="0.2" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Receive" To="Input" Weight="1">
+          <Label>
+            <Position X="1.7" Y="0.4" Width="0.25" />
+          </Label>
+        </Arc>
+      </Arcs>
+    </Model>
+
+  </Sensors>
+
+  <Channels>
+    <!--
+			Name: combination of ChannelType_ChannelMode
+		-->
+    <Model Name="CollapsedChannel" Parameter="" Zoom="1" PlaceCounter="1" TransitionCounter="1" In="Channel" Out="Channel">
+      <Places>
+      </Places>
+      <Transitions>
+        <Transition Name="Channel">
+          <Position X="1.2" Y="0.4" Width="0.2" />
+          <Label>
+            <Position X="1" Y="0.7" Width="0.6" />
+          </Label>
+          <Guard></Guard>
+          <Program></Program>
+        </Transition>
+      </Transitions>
+      <Arcs>
+      </Arcs>
+    </Model>
+
+    <Model Name="Unicast" Parameter="" Zoom="1" PlaceCounter="5" TransitionCounter="4" In="Receive" Out="Send">
+      <Places>
+        <Place Name="Main" NumOfToken="0" Capacity="0">
+          <Position X="1.6" Y="0.5" Width="0.2" />
+          <Label>
+            <Position X="1.5" Y="0.75" Width="0.4" />
+          </Label>
+          <Guard>
+          </Guard>
+        </Place>
+      </Places>
+      <Transitions>
+        <Transition Name="Congestion">
+          <Position X="2.3" Y="1.2" Width="0.2" />
+          <Label>
+            <Position X="2.2" Y="1.45" Width="0.8" />
+          </Label>
+          <Guard></Guard>
+          <Program>
+          </Program>
+        </Transition>
+        <Transition Name="Receive">
+          <Position X="0.6" Y="0.5" Width="0.2" />
+          <Label>
+            <Position X="0.5" Y="0.75" Width="0.6" />
+          </Label>
+          <Guard></Guard>
+          <Program></Program>
+        </Transition>
+        <Transition Name="Send">
+          <Position X="2.6" Y="0.5" Width="0.2" />
+          <Label>
+            <Position X="2.5" Y="0.75" Width="0.4" />
+          </Label>
+          <Guard></Guard>
+          <Program></Program>
+        </Transition>
+      </Transitions>
+      <Arcs>
+        <Arc From="Receive" To="Main" Weight="1">
+          <Label>
+            <Position X="1.1" Y="0.4" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Main" To="Send" Weight="1">
+          <Label>
+            <Position X="2.2" Y="0.4" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Main" To="Congestion" Weight="1">
+          <Label>
+            <Position X="1.9" Y="0.9" Width="0.25" />
+          </Label>
+        </Arc>
+      </Arcs>
+    </Model>
+
+    <Model Name="Multicast" Parameter="" Zoom="1" PlaceCounter="5" TransitionCounter="4" In="Receive" Out="Send">
+      <Places>
+        <Place Name="Main" NumOfToken="0" Capacity="0">
+          <Position X="1.6" Y="0.5" Width="0.2" />
+          <Label>
+            <Position X="1.5" Y="0.75" Width="0.4" />
+          </Label>
+          <Guard>
+          </Guard>
+        </Place>
+      </Places>
+      <Transitions>
+        <Transition Name="Congestion">
+          <Position X="2.3" Y="1.2" Width="0.2" />
+          <Label>
+            <Position X="2.2" Y="1.45" Width="0.8" />
+          </Label>
+          <Guard></Guard>
+          <Program>
+          </Program>
+        </Transition>
+        <Transition Name="Receive">
+          <Position X="0.6" Y="0.5" Width="0.2" />
+          <Label>
+            <Position X="0.5" Y="0.75" Width="0.6" />
+          </Label>
+          <Guard></Guard>
+          <Program></Program>
+        </Transition>
+        <Transition Name="Send">
+          <Position X="2.6" Y="0.5" Width="0.2" />
+          <Label>
+            <Position X="2.5" Y="0.75" Width="0.4" />
+          </Label>
+          <Guard></Guard>
+          <Program></Program>
+        </Transition>
+      </Transitions>
+      <Arcs>
+        <Arc From="Receive" To="Main" Weight="1">
+          <Label>
+            <Position X="1.1" Y="0.4" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Main" To="Send" Weight="1">
+          <Label>
+            <Position X="2.2" Y="0.4" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Main" To="Congestion" Weight="1">
+          <Label>
+            <Position X="1.9" Y="0.9" Width="0.25" />
+          </Label>
+        </Arc>
+      </Arcs>
+    </Model>
+
+    <Model Name="Broadcast" Parameter="" Zoom="1" PlaceCounter="5" TransitionCounter="4" In="Main" Out="Send">
+      <Places>
+        <Place Name="Main" NumOfToken="0" Capacity="0">
+          <Position X="1" Y="0.4" Width="0.2" />
+          <Label>
+            <Position X="0.9" Y="0.65" Width="0.4" />
+          </Label>
+          <Guard>
+          </Guard>
+        </Place>
+      </Places>
+      <Transitions>
+        <Transition Name="Congestion">
+          <Position X="1.8" Y="1.1" Width="0.2" />
+          <Label>
+            <Position X="1.7" Y="1.35" Width="0.8" />
+          </Label>
+          <Guard></Guard>
+          <Program>
+          </Program>
+        </Transition>
+        <Transition Name="Send">
+          <Position X="2.1" Y="0.4" Width="0.2" />
+          <Label>
+            <Position X="2" Y="0.65" Width="0.4" />
+          </Label>
+          <Guard></Guard>
+          <Program></Program>
+        </Transition>
+      </Transitions>
+      <Arcs>
+        <Arc From="Main" To="Send" Weight="1">
+          <Label>
+            <Position X="1.6" Y="0.4" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Main" To="Congestion" Weight="1">
+          <Label>
+            <Position X="1.5" Y="0.8" Width="0.25" />
+          </Label>
+        </Arc>
+      </Arcs>
+    </Model>
+  </Channels>
+</WSN_PN>

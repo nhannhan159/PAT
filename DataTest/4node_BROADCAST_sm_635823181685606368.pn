@@ -1,0 +1,472 @@
+<PN>
+  <Declaration>#import "PAT.Lib.Utils";
+
+
+#define S_MAX_BUFFER  50;
+#define S_MAX_QUEUE  50;
+#define C_MAX_BUFFER  50;
+var util = new PATUtils();
+var pkg = 10;
+
+// For debug testing
+var testMode = 1;
+
+//Configure for sensor 2
+var b2 = 0;
+var q2 = 0;
+var sbr2 = 10;
+var sqr2 = 10;
+
+//Configure for sensor 3
+var b3 = 0;
+var q3 = 0;
+var sbr3 = 10;
+var sqr3 = 10;
+
+//Configure for sensor 4
+var b4 = 0;
+var q4 = 0;
+var sbr4 = 10;
+var sqr4 = 10;
+
+//Configure for sensor 1
+var b1 = 0;
+var q1 = 0;
+var sbr1 = 10;
+var sqr1 = 10;
+
+//Configure for channel 1_2
+var b1_2 = 0;
+var r1_2 = 10;
+
+//Configure for channel 1_3
+var b1_3 = 0;
+var r1_3 = 10;
+
+//Configure for channel 2_4
+var b2_4 = 0;
+var r2_4 = 10;
+
+//Configure for channel 3_4
+var b3_4 = 0;
+var r3_4 = 10;
+
+System = Network_1();
+
+// Sensor check
+
+
+// Channel check
+#assert System |= []!(Congestion1_2 || Congestion1_3 || Congestion2_4 || Congestion3_4);
+
+#assert System deadlockfree;
+  </Declaration>
+  <Models>
+    <Model Name="Network_1" Parameter="" Zoom="1" PlaceCounter="0" TransitionCounter="0">
+      <Topology ID="635823181362616783" NumberOfSensors="4" NumberOfPackets="10" AvgBufferSensor="50" Mode="BROADCAST" AbstractedLevel="01">
+        <Sensor Name="Sensor 2" Init="False" SType="3" id="2" MaxSendingRate="10" MaxProcessingRate="10" CGNLevel="0" SizeOfBuffer="9999">
+          <Position X="2.43" Y="0.34" Width="0.2" />
+          <Label>
+            <Position X="2.33" Y="0.59" Width="0.6219791" />
+          </Label>
+        </Sensor>
+        <Sensor Name="Sensor 3" Init="False" SType="3" id="3" MaxSendingRate="10" MaxProcessingRate="10" CGNLevel="0" SizeOfBuffer="9999">
+          <Position X="2.57" Y="2.16" Width="0.2" />
+          <Label>
+            <Position X="2.47" Y="2.41" Width="0.6219791" />
+          </Label>
+        </Sensor>
+        <Sensor Name="Sensor 4" Init="False" SType="2" id="4" MaxSendingRate="10" MaxProcessingRate="10" CGNLevel="0" SizeOfBuffer="9999">
+          <Position X="4.33" Y="1.22" Width="0.2" />
+          <Label>
+            <Position X="4.23" Y="1.47" Width="0.6219791" />
+          </Label>
+        </Sensor>
+        <Sensor Name="Sensor 1" Init="True" SType="1" id="1" MaxSendingRate="10" MaxProcessingRate="10" CGNLevel="0" SizeOfBuffer="9999">
+          <Position X="0.8" Y="1.3" Width="0.2" />
+          <Label>
+            <Position X="0.7" Y="1.55" Width="0.6" />
+          </Label>
+        </Sensor>
+        <Link LType="Real" CType="2" MaxSendingRate="10" CGNLevel="0" id="1_2" SizeOfBuffer="9999">
+          <From>Sensor 1</From>
+          <To>Sensor 2</To>
+          <Select />
+          <Event />
+          <ClockGuard />
+          <Guard />
+          <Program />
+          <ClockReset />
+          <Label>
+            <Position X="1.815" Y="0.77" Width="0.25" />
+          </Label>
+        </Link>
+        <Link LType="Real" CType="2" MaxSendingRate="10" CGNLevel="0" id="1_3" SizeOfBuffer="9999">
+          <From>Sensor 1</From>
+          <To>Sensor 3</To>
+          <Select />
+          <Event />
+          <ClockGuard />
+          <Guard />
+          <Program />
+          <ClockReset />
+          <Label>
+            <Position X="1.885" Y="1.49" Width="0.25" />
+          </Label>
+        </Link>
+        <Link LType="Real" CType="2" MaxSendingRate="10" CGNLevel="0" id="2_4" SizeOfBuffer="9999">
+          <From>Sensor 2</From>
+          <To>Sensor 4</To>
+          <Select />
+          <Event />
+          <ClockGuard />
+          <Guard />
+          <Program />
+          <ClockReset />
+          <Label>
+            <Position X="3.48" Y="0.69" Width="0.25" />
+          </Label>
+        </Link>
+        <Link LType="Real" CType="2" MaxSendingRate="10" CGNLevel="0" id="3_4" SizeOfBuffer="9999">
+          <From>Sensor 3</From>
+          <To>Sensor 4</To>
+          <Select />
+          <Event />
+          <ClockGuard />
+          <Guard />
+          <Program />
+          <ClockReset />
+          <Label>
+            <Position X="3.55" Y="1.79" Width="0.25" />
+          </Label>
+        </Link>
+      </Topology>
+      <Places>
+        <Place Name="Sensor2" NumOfToken="0" Capacity="0" id="2">
+          <Position X="5.174999" Y="0.5" Width="0.2" />
+          <Label>
+            <Position X="5.074999" Y="0.75" Width="0.6" />
+          </Label>
+          <Guard>
+          </Guard>
+        </Place>
+        <Place Name="Main2_4" NumOfToken="0" Capacity="0" id="2_4">
+          <Position X="7.45" Y="1.5" Width="0.2" />
+          <Label>
+            <Position X="7.349999" Y="1.750001" Width="0.6" />
+          </Label>
+          <Guard>
+          </Guard>
+        </Place>
+        <Place Name="Sensor3" NumOfToken="0" Capacity="0" id="3">
+          <Position X="5.525" Y="5.050001" Width="0.2" />
+          <Label>
+            <Position X="5.425" Y="5.300001" Width="0.6" />
+          </Label>
+          <Guard>
+          </Guard>
+        </Place>
+        <Place Name="Main3_4" NumOfToken="0" Capacity="0" id="3_4">
+          <Position X="7.624999" Y="3.775" Width="0.2" />
+          <Label>
+            <Position X="7.525001" Y="4.025" Width="0.6" />
+          </Label>
+          <Guard>
+          </Guard>
+        </Place>
+        <Place Name="Sensor4" NumOfToken="1" Capacity="0" id="4">
+          <Position X="9.925001" Y="2.699999" Width="0.2" />
+          <Label>
+            <Position X="9.825001" Y="2.949999" Width="0.6" />
+          </Label>
+          <Guard>
+          </Guard>
+        </Place>
+        <Place Name="Sensor1" NumOfToken="1" Capacity="0" id="1">
+          <Position X="1.1" Y="2.9" Width="0.2" />
+          <Label>
+            <Position X="1" Y="3.15" Width="0.6" />
+          </Label>
+          <Guard>
+          </Guard>
+        </Place>
+        <Place Name="Main1_2" NumOfToken="0" Capacity="0" id="1_2">
+          <Position X="3.037501" Y="1.6" Width="0.2" />
+          <Label>
+            <Position X="2.9375" Y="1.85" Width="0.6" />
+          </Label>
+          <Guard>
+          </Guard>
+        </Place>
+        <Place Name="Main1_3" NumOfToken="0" Capacity="0" id="1_3">
+          <Position X="3.2125" Y="3.875" Width="0.2" />
+          <Label>
+            <Position X="3.1125" Y="4.125" Width="0.6" />
+          </Label>
+          <Guard>
+          </Guard>
+        </Place>
+      </Places>
+      <Transitions>
+        <Transition Name="Congestion2_4" id="2_4">
+          <Position X="8.25" Y="2.200001" Width="0.2" />
+          <Label>
+            <Position X="8.15" Y="2.450001" Width="1" />
+          </Label>
+          <Guard>b2_4 &amp;gt; C_MAX_BUFFER</Guard>
+          <Program>
+          </Program>
+        </Transition>
+        <Transition Name="Send2_4" id="2_4">
+          <Position X="8.55" Y="1.5" Width="0.2" />
+          <Label>
+            <Position X="8.45" Y="1.750001" Width="0.6" />
+          </Label>
+          <Guard>b2_4 &amp;gt; 0 &amp;amp;&amp;amp; b2_4 &amp;lt;= C_MAX_BUFFER</Guard>
+          <Program>var sub = util.getMin(b2_4, r2_4);
+if (testMode == 0)
+	sub = util.getRandInt(1, sub);
+b4 = b4 + sub;
+b2_4 = b2_4 - sub;
+if (b2_4 &gt; 0)
+	Main2_4 = 1;</Program>
+        </Transition>
+        <Transition Name="Congestion3_4" id="3_4">
+          <Position X="8.424999" Y="4.475" Width="0.2" />
+          <Label>
+            <Position X="8.324999" Y="4.725" Width="1" />
+          </Label>
+          <Guard>b3_4 &amp;gt; C_MAX_BUFFER</Guard>
+          <Program>
+          </Program>
+        </Transition>
+        <Transition Name="Send3_4" id="3_4">
+          <Position X="8.724999" Y="3.775" Width="0.2" />
+          <Label>
+            <Position X="8.624999" Y="4.025" Width="0.6" />
+          </Label>
+          <Guard>b3_4 &amp;gt; 0 &amp;amp;&amp;amp; b3_4 &amp;lt;= C_MAX_BUFFER</Guard>
+          <Program>var sub = util.getMin(b3_4, r3_4);
+if (testMode == 0)
+	sub = util.getRandInt(1, sub);
+b4 = b4 + sub;
+b3_4 = b3_4 - sub;
+if (b3_4 &gt; 0)
+	Main3_4 = 1;</Program>
+        </Transition>
+        <Transition Name="Receive4" id="4">
+          <Position X="9.755001" Y="3.019999" Width="0.2" />
+          <Label>
+            <Position X="9.595001" Y="3.309999" Width="0.6" />
+          </Label>
+          <Guard>
+          </Guard>
+          <Program>q4 = q4 + b4;
+b4 = 0;</Program>
+        </Transition>
+        <Transition Name="Congestion1_2" id="1_2">
+          <Position X="3.837501" Y="2.3" Width="0.2" />
+          <Label>
+            <Position X="3.737501" Y="2.55" Width="1" />
+          </Label>
+          <Guard>b1_2 &amp;gt; C_MAX_BUFFER</Guard>
+          <Program>
+          </Program>
+        </Transition>
+        <Transition Name="Send1_2" id="1_2">
+          <Position X="4.1375" Y="1.6" Width="0.2" />
+          <Label>
+            <Position X="4.037501" Y="1.85" Width="0.6" />
+          </Label>
+          <Guard>b1_2 &amp;gt; 0 &amp;amp;&amp;amp; b1_2 &amp;lt;= C_MAX_BUFFER</Guard>
+          <Program>var sub = util.getMin(b1_2, r1_2);
+if (testMode == 0)
+	sub = util.getRandInt(1, sub);
+b2 = b2 + sub;
+b1_2 = b1_2 - sub;
+if (b1_2 &gt; 0)
+	Main1_2 = 1;</Program>
+        </Transition>
+        <Transition Name="Congestion1_3" id="1_3">
+          <Position X="4.0125" Y="4.575" Width="0.2" />
+          <Label>
+            <Position X="3.9125" Y="4.825" Width="1" />
+          </Label>
+          <Guard>b1_3 &amp;gt; C_MAX_BUFFER</Guard>
+          <Program>
+          </Program>
+        </Transition>
+        <Transition Name="Send1_3" id="1_3">
+          <Position X="4.3125" Y="3.875" Width="0.2" />
+          <Label>
+            <Position X="4.2125" Y="4.125" Width="0.6" />
+          </Label>
+          <Guard>b1_3 &amp;gt; 0 &amp;amp;&amp;amp; b1_3 &amp;lt;= C_MAX_BUFFER</Guard>
+          <Program>var sub = util.getMin(b1_3, r1_3);
+if (testMode == 0)
+	sub = util.getRandInt(1, sub);
+b3 = b3 + sub;
+b1_3 = b1_3 - sub;
+if (b1_3 &gt; 0)
+	Main1_3 = 1;</Program>
+        </Transition>
+        <Transition Name="BroadCasting_2" id="">
+          <Position X="6.3125" Y="1" Width="0.2" />
+          <Label>
+            <Position X="6.2125" Y="1.22" Width="1.1" />
+          </Label>
+          <Guard>b2 &amp;gt; 0</Guard>
+          <Program>var sub = b2/1;
+b2_4 = b2_4 + b2 - sub*0;
+b2 = 0;</Program>
+        </Transition>
+        <Transition Name="BroadCasting_3" id="">
+          <Position X="6.575" Y="4.4125" Width="0.2" />
+          <Label>
+            <Position X="6.475" Y="4.6325" Width="1.1" />
+          </Label>
+          <Guard>b3 &amp;gt; 0</Guard>
+          <Program>var sub = b3/1;
+b3_4 = b3_4 + b3 - sub*0;
+b3 = 0;</Program>
+        </Transition>
+        <Transition Name="BroadCasting_1" id="">
+          <Position X="2.1125" Y="2.81875" Width="0.2" />
+          <Label>
+            <Position X="2.0125" Y="3.03875" Width="1.1" />
+          </Label>
+          <Guard>pkg &amp;gt; 0</Guard>
+          <Program>var sub;
+
+if (pkg &gt; 0) {
+	sub = util.getMin(sqr1, pkg);
+	b1_2 = b1_2 + sub;
+	if (testMode == 0)
+		b1_2 = b1_2 + util.getRandInt(1, sub);
+	pkg = pkg - sub;
+}
+
+if (pkg &gt; 0) {
+	sub = util.getMin(sqr1, pkg);
+	b1_3 = b1_3 + sub;
+	if (testMode == 0)
+		b1_3 = b1_3 + util.getRandInt(1, sub);
+	pkg = pkg - sub;
+}</Program>
+        </Transition>
+      </Transitions>
+      <Arcs>
+        <Arc From="Main2_4" To="Send2_4" Weight="1">
+          <Label>
+            <Position X="8.05" Y="1.5" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Main2_4" To="Congestion2_4" Weight="1">
+          <Label>
+            <Position X="7.95" Y="1.900001" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Main3_4" To="Send3_4" Weight="1">
+          <Label>
+            <Position X="8.224999" Y="3.775" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Main3_4" To="Congestion3_4" Weight="1">
+          <Label>
+            <Position X="8.124999" Y="4.175" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Sensor4" To="Receive4" Weight="1">
+          <Label>
+            <Position X="9.355" Y="2.919999" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Receive4" To="Sensor4" Weight="1">
+          <Label>
+            <Position X="9.355" Y="2.919999" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Main1_2" To="Send1_2" Weight="1">
+          <Label>
+            <Position X="3.6375" Y="1.6" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Main1_2" To="Congestion1_2" Weight="1">
+          <Label>
+            <Position X="3.537501" Y="2" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Main1_3" To="Send1_3" Weight="1">
+          <Label>
+            <Position X="3.8125" Y="3.875" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Main1_3" To="Congestion1_3" Weight="1">
+          <Label>
+            <Position X="3.7125" Y="4.275" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Send1_2" To="Sensor2" Weight="1">
+          <Label>
+            <Position X="4.65625" Y="1.05" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Send1_3" To="Sensor3" Weight="1">
+          <Label>
+            <Position X="4.91875" Y="4.462501" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Send2_4" To="Sensor4" Weight="1">
+          <Label>
+            <Position X="9.237501" Y="2.099999" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Send3_4" To="Sensor4" Weight="1">
+          <Label>
+            <Position X="9.325001" Y="3.2375" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Sensor2" To="BroadCasting_2" Weight="1">
+          <Label>
+            <Position X="0" Y="0" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="BroadCasting_2" To="Main2_4" Weight="1">
+          <Label>
+            <Position X="0" Y="0" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Sensor3" To="BroadCasting_3" Weight="1">
+          <Label>
+            <Position X="0" Y="0" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="BroadCasting_3" To="Main3_4" Weight="1">
+          <Label>
+            <Position X="0" Y="0" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Sensor1" To="BroadCasting_1" Weight="1">
+          <Label>
+            <Position X="0" Y="0" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="BroadCasting_1" To="Sensor1" Weight="1">
+          <Label>
+            <Position X="0" Y="0" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="BroadCasting_1" To="Main1_2" Weight="1">
+          <Label>
+            <Position X="0" Y="0" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="BroadCasting_1" To="Main1_3" Weight="1">
+          <Label>
+            <Position X="0" Y="0" Width="0.25" />
+          </Label>
+        </Arc>
+      </Arcs>
+    </Model>
+  </Models>
+</PN>

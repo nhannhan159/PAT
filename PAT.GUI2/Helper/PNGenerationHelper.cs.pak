@@ -1,0 +1,863 @@
+﻿using PAT.Common.GUI.Drawing;
+using PAT.Common.Ultility;
+using PAT.Module.KWSN;
+using PAT.Module.PN;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Xml;
+using Tools.Diagrams;
+
+
+namespace PAT.GUI
+{
+    /// <summary>
+    /// Used for generate PN files
+    /// </summary>
+    public class PNGenerationHelper
+    {
+
+        // BASE FILE NAME -------------------------------------------------
+        private string PNBaseFileName = "wsn-pn-based.xml";
+        // ----------------------------------------------------------------
+
+        private const string TAG = "PNExportHelper";
+
+        private string _fileName = null;
+        
+
+        private XmlDocument _docOut = null;
+        private XmlElement _xRoot = null;
+        private XmlElement _declaration = null;
+
+        private XmlDocument _docPNRes;
+
+        private const int XPositionShift = 1;
+        private const int YPositionShift = 1;
+
+        private IList<WSNCanvas> mCanvas;
+
+        // LOCAITON MIN OF SENSERS ------------------------------------------------------------- 
+        private float minX = 0;
+        private float minY = 0;
+        // -------------------------------------------------------------------------------------
+
+        public String GetGeneratedFileName()
+        {
+            return _fileName;
+        }
+
+        public PNGenerationHelper(string fileName, IList<WSNCanvas> listCanvas)
+        {
+            _fileName = fileName;
+            mCanvas = listCanvas;
+            initXML();
+        }
+
+        private void initXML()
+        {
+            _docOut = new XmlDocument();
+            _xRoot = _docOut.CreateElement(PNNode.TAG_PN);
+            _declaration = _docOut.CreateElement((PNNode.TAG_DECLARATION));
+            _xRoot.AppendChild(_declaration);
+            _docOut.AppendChild(_xRoot);
+        }
+
+        /// <summary>
+        /// Generate PN xml file from KWSN model
+        /// </summary>
+        /// <param name="abstractSensor">if Sensors are abstracted</param>
+        /// <param name="abstractChannel">if Channel are abstracted</param>
+        /// <returns>PN xml</returns>
+        public XmlDocument generateXML(bool abstractSensor, bool abstractChannel)
+        {
+            bool blError = false;
+            XmlElement models = _docOut.CreateElement(PNNode.TAG_MODELS);
+            _xRoot.AppendChild(models);
+
+            foreach (WSNCanvas canvas in mCanvas)
+            {
+                List<WSNSensor> _sensors = new List<WSNSensor>();
+                List<WSNChannel> _channels = new List<WSNChannel>();
+                // get the sensors list
+                foreach (LTSCanvas.CanvasItemData item in canvas.itemsList)
+                {
+                    if (item.Item is WSNSensor)
+                    {
+
+                        WSNSensor add = (WSNSensor)item.Item;
+                        add.locateX = item.Item.X / 120;
+                        add.locateY = item.Item.Y / 120;
+
+                        if (minX == 0 || add.locateX < minX)
+                            minX = add.locateX;
+                        if (minY == 0 || add.locateY < minY)
+                            minY = add.locateY;
+
+                        _sensors.Add(add);
+                    }
+                }
+
+                // get the channels list
+                foreach (Route route in canvas.diagramRouter.routes)
+                {
+                    if (route is WSNChannel)
+                    {
+                        _channels.Add((WSNChannel)route);
+                    }
+                }
+
+                XmlElement topology = _docOut.CreateElement(PNNode.TAG_TOPOLOGY);
+                topology.SetAttribute(PNNode.TAG_ABSTRACTEDLEVEL, (abstractSensor ? "0" : "1") + (abstractChannel ? "0" : "1"));
+
+                foreach (WSNSensor sensor in _sensors)
+                    topology.AppendChild(sensor.WriteToXml(_docOut));
+
+                foreach (WSNChannel channel in _channels)
+                    topology.AppendChild(channel.WriteToXml(_docOut));
+
+                XmlElement model = _docOut.CreateElement(PNNode.TAG_MODEL);
+
+                XmlElement places = _docOut.CreateElement(PNNode.TAG_PLACES);
+                XmlElement transitions = _docOut.CreateElement(PNNode.TAG_TRANSITIONS);
+                XmlElement arcs = _docOut.CreateElement(PNNode.TAG_ARCS);
+
+                models.AppendChild(model);
+                model.AppendChild(places);
+                model.AppendChild(transitions);
+                model.AppendChild(arcs);
+                model.AppendChild(topology);
+
+                // ADD DECLARATION ------------------------------------------------------------------------------------
+                int destNodeId = findDestinationNodeId(_sensors);
+                _declaration.InnerXml = String.Format(_docPNRes.GetElementsByTagName(PNNode.TAG_DECLARATION)[0].InnerXml,
+                    _sensors.Count, 10, 10, destNodeId, canvas.ProcessName);
+                // ----------------------------------------------------------------------------------------------------
+
+                do
+                {
+                    WSNPNData data = null;
+
+                    float xStartPos = 0;
+                    float yStartPos = 0;
+
+                    #region Add Sensor info
+                    Hashtable mapData = new Hashtable();
+                    foreach (WSNSensor sensor in _sensors)
+                    {
+                        // GENERATE CODE WITH COLLAPSE OPTIONS ----------------------------------------------------------------
+                        data = sensor.GeneratePNXml(_docPNRes, sensor.ID.ToString(), abstractSensor, sensor.locateX - minX, sensor.locateY - minY);
+                        //data = sensor.GeneratePNXml(docRes, sensor.X, sensor.Y);
+
+                        if (data == null)
+                        {
+                            Log.d(TAG, "Failed to generate the sensor PN xml nodes");
+                            blError = true;
+                            break;
+                        }
+
+                        mapData[sensor.ID] = data;
+                        xStartPos += XPositionShift;
+
+                        compileCodeToSensor(canvas, data, sensor, _channels, destNodeId, abstractSensor);
+                        addPNData(data, ref places, ref transitions, ref arcs);
+
+                        // then find the channel connected with this sensor
+                        foreach (WSNChannel channel in _channels)
+                        {
+                            if (((WSNSensor)channel.From).ID != sensor.ID)
+                                continue;
+
+                            xStartPos = (channel.From.AbsoluteX + channel.To.AbsoluteX) / 240;
+                            yStartPos = (channel.From.AbsoluteY + channel.To.AbsoluteY) / 240;
+
+
+                            // GENERATE CODE WITH COLLAPSE OPTIONS ----------------------------------------------------------------
+                            data = channel.GeneratePNXml(_docPNRes, channel.ID.ToString(), abstractChannel, xStartPos - minX, yStartPos - minY);
+                            //data = channel.GeneratePNXml(docRes, channel.From.X, channel.From.Y);
+
+                            if (data == null)
+                            {
+                                Log.d(TAG, "Failed to generate the sensor PN xml nodes");
+                                blError = true;
+                                break;
+                            }
+
+                            mapData[channel.ID] = data;
+                            xStartPos += XPositionShift;
+                            yStartPos += YPositionShift;
+
+                            compileCodeToChannel(data, channel, abstractChannel);
+                            addPNData(data, ref places, ref transitions, ref arcs);
+                        } // foreach
+
+                        if (blError == true)
+                            break;
+                    } // foreach
+                    if (blError == true)
+                        break;
+
+                    // connect the model
+                    int fromId, toId;
+                    WSNPNData fromData, toData;
+
+                    foreach (WSNChannel channel in _channels)
+                    {
+                        fromId = ((WSNSensor)channel.From).ID;
+                        toId = ((WSNSensor)channel.To).ID;
+
+                        // arc from
+                        fromData = (WSNPNData)mapData[fromId];
+                        toData = (WSNPNData)mapData[channel.ID];
+                        addConnector(ref arcs, ref transitions, ref fromData, ref toData, true, abstractSensor, abstractChannel, (WSNSensor)channel.From);
+
+                        // build code for connector
+                        if (!abstractChannel)
+                            buildCodeForConn(canvas, ref transitions, _sensors, _channels, fromData, toData, (WSNSensor)channel.From, abstractSensor);
+
+                        // arc to
+                        fromData = (WSNPNData)mapData[channel.ID];
+                        toData = (WSNPNData)mapData[toId];
+                        addConnector(ref arcs, ref transitions, ref fromData, ref toData, false, abstractSensor, abstractChannel, (WSNSensor)channel.To);
+
+                        // build code for connector
+                        if (!abstractChannel)
+                            buildCodeForConn(canvas, ref transitions, _sensors, _channels, fromData, toData, (WSNSensor)channel.To, abstractSensor);
+                    }
+                    #endregion
+
+                    #region Update model properties
+                    // update the property
+                    model.SetAttribute(PNNode.TAG_PRO_NAME, canvas.ProcessName);
+                    model.SetAttribute(PNNode.TAG_MODEL_PRO_PARAM, "");
+                    model.SetAttribute(PNNode.TAG_MODEL_PRO_ZOOM, "1");
+                    model.SetAttribute(PNNode.TAG_MODEL_PRO_PCOUNTER, "0");
+                    model.SetAttribute(PNNode.TAG_MODEL_PRO_TCOUNTER, "0");
+                    #endregion
+
+                } while (false);
+            }
+
+            return _docOut;
+        }
+
+        // S - NEW CODE FOR COMPILE CODE TO MODEL (Q.VU - 20/02/2015) 
+        private void compileCodeToChannel(WSNPNData data, WSNChannel channel, bool isAbstract)
+        {
+            do
+            {
+                // get xml node to transition then edit content
+                XmlNode transition;
+
+                // get program xml node
+                XmlNode progNode = null;
+
+                if (isAbstract)
+                {
+                    transition = data.transitions.SelectSingleNode("./Transition[@Name='Channel" + channel.ID + "']");
+                    progNode = transition.SelectSingleNode("./Guard");
+                    progNode.InnerText = String.Format(progNode.InnerText,
+                            ((WSNSensor)channel.From).ID, ((WSNSensor)channel.To).ID); // id of current sensor 
+
+                    progNode = transition.SelectSingleNode("./Program");
+                    progNode.InnerText = String.Format(progNode.InnerText,
+                           ((WSNSensor)channel.From).ID, ((WSNSensor)channel.To).ID, channel.ID); // id of current sensor 
+                    break;
+                }
+
+                // full channel
+                // update code for program and guard
+                if (channel.Type == ChannelType.Unicast)
+                {
+                    transition = data.transitions.SelectSingleNode("./Transition[@Name='Receive" + channel.ID + "']");
+                    progNode = transition.SelectSingleNode("./Guard");
+                    progNode.InnerText = String.Format(progNode.InnerText,
+                            ((WSNSensor)channel.From).ID, ((WSNSensor)channel.To).ID); // id of current sensor 
+
+                    transition = data.transitions.SelectSingleNode("./Transition[@Name='Send" + channel.ID + "']");
+                    progNode = transition.SelectSingleNode("./Guard");
+                    progNode.InnerText = String.Format(progNode.InnerText,
+                            ((WSNSensor)channel.From).ID, ((WSNSensor)channel.To).ID); // id of current sensor 
+
+                    progNode = transition.SelectSingleNode("./Program");
+                    progNode.InnerText = String.Format(progNode.InnerText,
+                           ((WSNSensor)channel.From).ID, ((WSNSensor)channel.To).ID, channel.ID); // id of current sensor 
+
+                    if (channel.Mode == ChannelMode.Reliable)
+                    {
+                        // no thing
+                        break;
+                    }
+
+                    if (channel.Mode == ChannelMode.Unreliable)
+                    {
+                        transition = data.transitions.SelectSingleNode("./Transition[@Name='Packetlost" + channel.ID + "']");
+                        progNode = transition.SelectSingleNode("./Guard");
+                        progNode.InnerText = String.Format(progNode.InnerText,
+                               ((WSNSensor)channel.From).ID, ((WSNSensor)channel.To).ID); // id of current sensor 
+                        break;
+                    }
+                    break;
+                }
+            } while (false);
+        }
+
+        // S - NEW CODE FOR COMPILE CODE TO MODEL (Q.VU - 20/02/2015) 
+        private void compileCodeToSensor(WSNCanvas canvas, WSNPNData data, WSNSensor sensor, IList<WSNChannel> _channels, int destNodeId, bool isAbstract)
+        {
+            do
+            {
+                if (isAbstract)
+                {
+                    break;
+                }
+
+                SensorType type = sensor.NodeType;
+
+                // get xml node to transition then edit content
+                XmlNode transition;
+
+                // get program xml node
+                XmlNode progNode = null;
+
+                // list store all id of sensor connected to current sensor
+                List<Int32> idOfNodesConnected;
+
+                // convert data to string
+                StringBuilder buildForNodesConnected;
+                StringBuilder buildForToken;
+
+
+                idOfNodesConnected = getIdOfNodesConnected(_channels, sensor.ID);
+                buildForNodesConnected = new StringBuilder("[");
+                buildForToken = new StringBuilder();
+
+                // build for connected node
+                for (int i = 0; i < idOfNodesConnected.Count; ++i)
+                {
+                    buildForNodesConnected.Append(idOfNodesConnected[i]);
+                    if (i < idOfNodesConnected.Count - 1)
+                        buildForNodesConnected.Append(",");
+                }
+                if (idOfNodesConnected.Count == 0) buildForNodesConnected.Append("0"); // FIXBUG not recognize array in code libs
+                buildForNodesConnected.Append("]");
+
+                // full sensor case
+                #region compile code for sensor
+                if (type == SensorType.Source)
+                {
+                    // build for connected node
+                    for (int i = 0; i < idOfNodesConnected.Count; ++i)
+                    {
+                        buildForToken.Append(String.Format("\nInput{0}{1} = 1;", sensor.ID, idOfNodesConnected[i]));
+                    }
+
+
+                    transition = data.transitions.SelectSingleNode("./Transition[@Name='Send" + sensor.ID + "']");
+                    progNode = transition.SelectSingleNode("./Program");
+                    progNode.InnerText = String.Format(progNode.InnerText,
+                       sensor.ID, // getSensorBS({x})
+                       destNodeId, // destination node
+                       buildForNodesConnected.ToString(),
+                       buildParamsForInit(canvas)); // send to nodes
+                    break;
+                }
+
+                if (type == SensorType.Sink)
+                {
+                    transition = data.transitions.SelectSingleNode("./Transition[@Name='Receive" + sensor.ID + "']");
+                    progNode = transition.SelectSingleNode("./Program");
+                    progNode.InnerText = String.Format(progNode.InnerText,
+                        sensor.ID,
+                        buildForNodesConnected.ToString()); // id of current sensor 
+                    break;
+                }
+
+                if (type == SensorType.Intermediate)
+                {
+                    for (int i = 0; i < idOfNodesConnected.Count; ++i)
+                    {
+                        buildForToken.Append(String.Format("\nOutput{0}_{1} = 1;", sensor.ID, idOfNodesConnected[i]));
+                    }
+
+                    transition = data.transitions.SelectSingleNode("./Transition[@Name='Receive" + sensor.ID + "']");
+                    progNode = transition.SelectSingleNode("./Program");
+                    progNode.InnerText = String.Format(progNode.InnerText,
+                            sensor.ID, // id of current sensor 
+                            buildForNodesConnected.ToString());
+
+
+                    transition = data.transitions.SelectSingleNode("./Transition[@Name='Send" + sensor.ID + "']");
+                    progNode = transition.SelectSingleNode("./Guard");
+                    progNode.InnerText = String.Format(progNode.InnerText, sensor.ID);
+
+                    progNode = transition.SelectSingleNode("./Program");
+                    progNode.InnerText = String.Format(progNode.InnerText,
+                            sensor.ID, // sensor id
+                            buildForNodesConnected.ToString()); // send to nodes
+
+                    if (sensor.NodeMode == SensorMode.Incongestable)
+                    {
+                        // not change
+                        break;
+                    }
+
+                    if (sensor.NodeMode == SensorMode.Congestable)
+                    {
+                        // congestion place
+                        transition = data.transitions.SelectSingleNode("./Transition[@Name='Congestion" + sensor.ID + "']");
+                        progNode = transition.SelectSingleNode("./Guard");
+                        progNode.InnerText = String.Format(progNode.InnerText,
+                                sensor.ID); // id of current sensor 
+                        break;
+                    }
+
+                    if (sensor.NodeMode == SensorMode.Dropped)
+                    {
+                        // congestion place
+                        transition = data.transitions.SelectSingleNode("./Transition[@Name='Congestion" + sensor.ID + "']");
+                        progNode = transition.SelectSingleNode("./Guard");
+                        progNode.InnerText = String.Format(progNode.InnerText,
+                                sensor.ID); // id of current sensor
+                        progNode = transition.SelectSingleNode("./Program");
+                        progNode.InnerText = String.Format(progNode.InnerText,
+                               sensor.ID); // id of current sensor
+
+                        // droppacket place
+                        transition = data.transitions.SelectSingleNode("./Transition[@Name='Droppacket" + sensor.ID + "']");
+                        progNode = transition.SelectSingleNode("./Guard");
+                        progNode.InnerText = String.Format(progNode.InnerText,
+                                sensor.ID); // id of current sensor
+                        progNode = transition.SelectSingleNode("./Program");
+                        progNode.InnerText = String.Format(progNode.InnerText,
+                               sensor.ID); // id of current sensor
+                        break;
+                    }
+                    break;
+                }
+                #endregion compile code for sensor
+
+            } while (false);
+        }
+
+        private void addConnector(ref XmlElement arcs, ref XmlElement transitions, ref WSNPNData fromData,
+            ref WSNPNData toData, bool fromIsSensor, bool isAbsSensor, bool isAbsChann, WSNSensor sensorItem)
+        {
+            do
+            {
+                float xPos, yPos, fTmp;
+
+                // not build connector
+                if (isAbsChann)
+                {
+                    arcs.AppendChild(buildArc(fromData.outNode.name + fromData.nodeId, toData.inNode.name + toData.nodeId, 0, 0));
+                    break;
+                }
+
+                // build connector
+                XmlElement label;
+                XmlElement position;
+                XmlElement position2;
+                XmlElement tran;
+                XmlElement prog;
+
+
+                String tranName;
+                XmlNode conn;
+
+                //if (fromIsSensor)
+                //{
+                //    tranName = "ConnOut_" + fromData.nodeId;
+                //    conn = transitions.SelectSingleNode("./Transition[@Name='ConnOut_" + fromData.nodeId + "']");
+
+
+                //    if (conn != null)
+                //    {
+                //        // build arc
+                //        xPos = (float)Convert.ToDouble(conn.SelectSingleNode("./Position").Attributes["X"].Value);
+                //        yPos = (float)Convert.ToDouble(conn.SelectSingleNode("./Position").Attributes["Y"].Value);
+                //        arcs.AppendChild(buildArc(tranName, toData.inNode.name + toData.nodeId, xPos, yPos));
+
+                //        break;
+                //    }
+                //}
+                //else
+                //{
+                //    tranName = "ConnIn_" + toData.nodeId;
+                //    conn = transitions.SelectSingleNode("./Transition[@Name='ConnIn_" + toData.nodeId + "']");
+
+                //    if (conn != null)
+                //    {
+                //        // build arc
+                //        xPos = (float)Convert.ToDouble(conn.SelectSingleNode("./Position").Attributes["X"].Value);
+                //        yPos = (float)Convert.ToDouble(conn.SelectSingleNode("./Position").Attributes["Y"].Value);
+                //        arcs.AppendChild(buildArc(fromData.outNode.name + fromData.nodeId, tranName, xPos, yPos));
+
+                //        break;
+                //    }
+                //}
+
+                if (fromIsSensor)
+                    tranName = "ConnOut_" + toData.nodeId;
+                else
+                    tranName = "ConnIn_" + fromData.nodeId;
+
+
+                tran = _docOut.CreateElement(PNNode.TAG_TRANSITION);
+                tran.SetAttribute(PNNode.TAG_PRO_NAME, tranName);
+                label = _docOut.CreateElement(PNNode.TAG_LABEL);
+                position = _docOut.CreateElement(PNNode.TAG_POSITION);
+                position2 = _docOut.CreateElement(PNNode.TAG_POSITION);
+
+                fTmp = Math.Abs(fromData.outNode.pos.x - toData.inNode.pos.x) / 2;
+                xPos = Math.Min(fromData.outNode.pos.x, toData.inNode.pos.x) + fTmp;
+                position.SetAttribute(PNNode.TAG_POSITION_X, xPos.ToString());
+                position2.SetAttribute(PNNode.TAG_POSITION_X, (xPos - 0.1).ToString());
+
+                fTmp = Math.Abs(fromData.outNode.pos.y - toData.inNode.pos.y) / 2;
+                yPos = Math.Min(fromData.outNode.pos.y, toData.inNode.pos.y) + fTmp;
+                position.SetAttribute(PNNode.TAG_POSITION_Y, yPos.ToString());
+                position2.SetAttribute(PNNode.TAG_POSITION_Y, (yPos + 0.22).ToString());
+
+                position.SetAttribute(PNNode.TAG_POSITION_WIDTH, "0.25");
+                label.AppendChild(position2);
+                tran.AppendChild(position);
+                tran.AppendChild(label);
+                tran.AppendChild(_docOut.CreateElement(PNNode.TAG_GUARD));
+
+                prog = _docOut.CreateElement(PNNode.TAG_PROGRAM);
+                prog.InnerText = "";
+                tran.AppendChild(prog);
+                transitions.AppendChild(tran);
+
+                // build arc1 (from sensor/channel to connecter)
+                arcs.AppendChild(buildArc(fromData.outNode.name + fromData.nodeId, tranName, xPos, yPos));
+
+                // trans two ways for all sensor
+                if (isAbsSensor && fromIsSensor)
+                    arcs.AppendChild(buildArc(tranName, fromData.outNode.name + fromData.nodeId, xPos, yPos));
+
+                // build arc2 (from connecter to channel/sensor)
+                arcs.AppendChild(buildArc(tranName, toData.inNode.name + toData.nodeId, xPos, yPos));
+                if (sensorItem.NodeType == SensorType.Sink && toData.nodeId.Equals(sensorItem.ID + ""))
+                    arcs.AppendChild(buildArc(toData.inNode.name + toData.nodeId, tranName, xPos, yPos));
+
+            } while (false);
+        }
+
+        private void buildCodeForConn(WSNCanvas canvas, ref XmlElement transitions, IList<WSNSensor> _sensors, IList<WSNChannel> _channels, WSNPNData fromData,
+            WSNPNData toData, WSNSensor sensorItem, bool isAbstractSensor)
+        {
+            do
+            {
+                SensorType type = sensorItem.NodeType;
+                XmlNode conn = null;
+                XmlNode prog = null;
+                XmlNode exp = null;
+                List<Int32> idOfNodesConnected;
+
+                // convert data to string
+                StringBuilder buildForNodesConnected;
+                StringBuilder buildForToken;
+                StringBuilder buildNextNode;
+
+
+                idOfNodesConnected = getIdOfNodesConnected(_channels, sensorItem.ID);
+                buildForNodesConnected = new StringBuilder("[");
+                buildForToken = new StringBuilder();
+                buildNextNode = new StringBuilder();
+
+                for (int i = 0; i < idOfNodesConnected.Count; ++i)
+                {
+                    buildForNodesConnected.Append(idOfNodesConnected[i]);
+                    if (i < idOfNodesConnected.Count - 1)
+                        buildForNodesConnected.Append(",");
+                }
+
+
+
+                if (idOfNodesConnected.Count == 0) buildForNodesConnected.Append("0"); // FIXBUG not recognize array in code libs
+                buildForNodesConnected.Append("]");
+
+                buildNextNode.Append("[");
+                buildNextNode.Append(toData.nodeId.Split('_')[toData.nodeId.Split('_').Length - 1]);
+                buildNextNode.Append("]");
+
+                if (type == SensorType.Source)
+                {
+                    conn = transitions.SelectSingleNode("./Transition[@Name='ConnOut_" + toData.nodeId + "']");
+                    prog = conn.SelectSingleNode("./Program");
+
+                    if (prog.InnerText.Length > 0)
+                        break;
+
+                    exp = fromData.places.SelectSingleNode("./Place[@Name='Sensor" + sensorItem.ID + "']");
+
+                    for (int i = 0; i < idOfNodesConnected.Count; ++i)
+                    {
+                        buildForToken.Append(String.Format("\nInput{0}_{1} = 1;", sensorItem.ID, idOfNodesConnected[i]));
+                    }
+
+                    if (isAbstractSensor)
+                    {
+                        prog.InnerText =
+                           String.Format(exp.SelectSingleNode("./ProgExpSource").InnerText,
+                           sensorItem.ID, // getSensorBS({x})
+                           findDestinationNodeId(_sensors), // destination node
+                           buildForNodesConnected.ToString(),
+                           buildParamsForInit(canvas),
+                           buildForToken.ToString(),
+                           buildNextNode.ToString()); // send to nodes
+
+                        // not deadlock free
+                        //prog = conn.SelectSingleNode("./Guard");
+                        //prog.InnerText = String.Format(exp.SelectSingleNode("./GuardExpSource").InnerText,
+                        //    sensorItem.ID); // id of current sensor 
+
+                        break;
+                    }
+
+                    // full sensor and channel case
+                    prog.InnerText = buildForToken.ToString();
+                    break;
+                }
+
+                if (type == SensorType.Sink)
+                {
+                    if (!isAbstractSensor)
+                        break;
+
+                    // abstract sensor case
+                    conn = transitions.SelectSingleNode("./Transition[@Name='ConnIn_" + fromData.nodeId + "']");
+                    prog = conn.SelectSingleNode("./Program");
+                    if (prog.InnerText.Length > 0)
+                        break;
+
+                    exp = toData.places.SelectSingleNode("./Place[@Name='Sensor" + sensorItem.ID + "']");
+                    prog.InnerText = String.Format(exp.SelectSingleNode("./ProgExpSink").InnerText,
+                        sensorItem.ID,
+                        buildNextNode.ToString()); // id of current sensor 
+
+                    break;
+                }
+
+                // pre code inner sensor
+                if (toData.nodeId.Equals(sensorItem.ID + ""))
+                {
+
+                    break;
+                }
+
+                // end code inner sensor
+                if (fromData.nodeId.Equals(sensorItem.ID + ""))
+                {
+                    conn = transitions.SelectSingleNode("./Transition[@Name='ConnOut_" + toData.nodeId + "']");
+                    prog = conn.SelectSingleNode("./Program");
+                    exp = fromData.places.SelectSingleNode("./Place[@Name='Sensor" + sensorItem.ID + "']");
+
+                    if (prog.InnerText.Length > 0)
+                        break;
+
+                    for (int i = 0; i < idOfNodesConnected.Count; ++i)
+                    {
+                        buildForToken.Append(String.Format("\nInput{0}_{1} = 1;", sensorItem.ID, idOfNodesConnected[i]));
+                    }
+
+                    if (isAbstractSensor)
+                    {
+                        prog.InnerText = String.Format(exp.SelectSingleNode("./ProgExpPost").InnerText,
+                                sensorItem.ID, // id of current sensor 
+                                buildForNodesConnected.ToString(),
+                                buildForToken.ToString(),
+                                buildNextNode.ToString()); // send to nodes
+
+
+                        prog = conn.SelectSingleNode("./Guard");
+                        prog.InnerText = String.Format(exp.SelectSingleNode("./GuardExpPost").InnerText,
+                            sensorItem.ID); // id of current sensor 
+
+                        break;
+                    }
+
+                    // full sensor and channel case
+                    prog.InnerText = buildForToken.ToString();
+                    break;
+                }
+            } while (false);
+        }
+
+        private XmlElement buildArc(string nameFrom, string nameTo, float xPos, float yPos)
+        {
+            XmlElement arc;
+            XmlElement label;
+            XmlElement position;
+
+            arc = _docOut.CreateElement(PNNode.TAG_ARC);
+            arc.SetAttribute(PNNode.TAG_ARC_PRO_FROM, nameFrom);
+            arc.SetAttribute(PNNode.TAG_ARC_PRO_TO, nameTo);
+            arc.SetAttribute(PNNode.TAG_ARC_PRO_WEIGHT, "1");
+
+            label = _docOut.CreateElement(PNNode.TAG_LABEL);
+            position = _docOut.CreateElement(PNNode.TAG_POSITION);
+            position.SetAttribute(PNNode.TAG_POSITION_X, xPos.ToString());
+            position.SetAttribute(PNNode.TAG_POSITION_Y, yPos.ToString());
+            position.SetAttribute(PNNode.TAG_POSITION_WIDTH, "0.25");
+            label.AppendChild(position);
+            arc.AppendChild(label);
+            return arc;
+        }
+
+        /// <summary>
+        /// Find destination node ID
+        /// </summary>
+        /// <returns>Node ID</returns>
+        private int findDestinationNodeId(IList<WSNSensor> _sensors)
+        {
+            int ret = 0;
+
+            foreach (WSNSensor wsItem in _sensors)
+            {
+                if (wsItem.NodeType == SensorType.Sink)
+                {
+                    ret = wsItem.ID;
+                    break;
+                }
+            }
+            return ret;
+        }
+
+        /// <summary>
+        /// Build params for init state
+        /// </summary>
+        /// <param name="mCanvas">canvas current content sensor canvas and channel canvas</param>
+        /// <returns>string params combile </returns>
+        private String buildParamsForInit(LTSCanvas mCanvas)
+        {
+
+            StringBuilder builder = new StringBuilder();
+
+            WSNSensor mSensor;
+            WSNChannel mChannel;
+
+            foreach (LTSCanvas.CanvasItemData item in mCanvas.itemsList)
+            {
+                mSensor = item.Item as WSNSensor;
+
+                if (mSensor != null)
+                {
+                    builder.Append("\n\n\t// init for sensor " + mSensor.Name);
+                    builder.Append(String.Format("\n\tnet.setSensorBMS({0}, {1});", mSensor.ID, mSensor.MaxSizeOfBuffer));
+                    builder.Append(String.Format("\n\tnet.setSensorSendingRate({0}, {1});", mSensor.ID, mSensor.SendingRate));
+                    builder.Append(String.Format("\n\tnet.setSensorProcessingRate({0}, {1});", mSensor.ID, mSensor.ProcessingRate));
+                    // soon
+
+                    if (mSensor.NodeMode == SensorMode.Congestable)
+                    {
+                        builder.Append(String.Format("\n\tnet.setFullForSensor({0});", mSensor.ID));
+                    }
+                    else if (mSensor.NodeMode == SensorMode.Dropped)
+                    {
+                        builder.Append(String.Format("\n\tnet.setDroppedState({0}, true);", mSensor.ID));
+                    }
+                }
+            }
+
+
+            foreach (Route route in mCanvas.diagramRouter.routes)
+            {
+                mChannel = route as WSNChannel;
+
+                if (mChannel != null)
+                {
+                    builder.Append("\n\n\t// init for channel " + mChannel.ID);
+                    builder.Append(String.Format("\n\tnet.setChannelBMS({0}, {1}, {2});",
+                        (mChannel.From as WSNSensor).ID,
+                        (mChannel.To as WSNSensor).ID,
+                        mChannel.MaxBufferSize));
+                    builder.Append(String.Format("\n\tnet.setChannelSendingRate({0}, {1}, {2});",
+                        (mChannel.From as WSNSensor).ID,
+                        (mChannel.To as WSNSensor).ID,
+                        mChannel.SendingRate));
+                    // soon
+                }
+
+            }
+
+            return builder.ToString();
+        }
+
+        /// <summary>
+        /// Get all id of sensor connected to current sensor
+        /// </summary>
+        /// <param name="channels"></param>
+        /// <param name="sensorId"></param>
+        /// <returns></returns>
+        private List<Int32> getIdOfNodesConnected(IList<WSNChannel> channels, int sensorId)
+        {
+            List<Int32> ids = new List<Int32>();
+            WSNSensor sensorTmp;
+
+            foreach (WSNChannel channel in channels)
+            {
+                sensorTmp = channel.From as WSNSensor;
+                if (((WSNSensor)channel.From).ID == sensorId)
+                {
+                    ids.Add(((WSNSensor)channel.To).ID);
+                }
+            }
+
+            return ids;
+        }
+
+
+
+        /// <summary>
+        /// Update the PN data to the final output file
+        /// </summary>
+        /// <param name="data">The input PN data of current item</param>
+        /// <param name="places">Places node parent</param>
+        /// <param name="transitions">Transitions node parent</param>
+        /// <param name="arcs">Arcs node parent</param>
+        private void addPNData(WSNPNData data, ref XmlElement places, ref XmlElement transitions, ref XmlElement arcs)
+        {
+            XmlElement[,] map = new XmlElement[,]
+            {
+                { data.places, places },
+                { data.transitions, transitions },
+                { data.arcs, arcs },
+            };
+            XmlDocumentFragment xFrag = null;
+
+            for (int i = 0; i < map.GetLength(0); i++)
+            {
+                foreach (XmlElement xml in map[i, 0].ChildNodes)
+                {
+                    xFrag = _docOut.CreateDocumentFragment();
+                    xFrag.InnerXml = xml.OuterXml;
+                    map[i, 1].AppendChild(xFrag);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Load PN base resource
+        /// </summary>
+        public void LoadPNRes()
+        {
+            //string path = Path.Combine(Common.Ultility.Ultility.ModuleFolderPath, moduleName, PNXmlRes);
+
+            try
+            {
+                _docPNRes = new XmlDocument();
+                _docPNRes.Load(@"XML/" + PNBaseFileName);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+        
+    }
+}
