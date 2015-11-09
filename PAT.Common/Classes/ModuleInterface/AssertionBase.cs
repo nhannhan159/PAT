@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
@@ -8,6 +9,7 @@ using Antlr.Runtime;
 using PAT.Common.Classes.DataStructure;
 using PAT.Common.Classes.Expressions.ExpressionClass;
 using PAT.Common.Classes.Ultility;
+using QuickGraph;
 
 namespace PAT.Common.Classes.ModuleInterface
 {
@@ -730,5 +732,93 @@ namespace PAT.Common.Classes.ModuleInterface
             return (SelectedEngineName == Constants.ENGINE_FORWARD_SEARCH_BDD || SelectedEngineName == Constants.ENGINE_BACKWARD_SEARCH_BDD ||
                 SelectedEngineName == Constants.ENGINE_FORWARD_BACKWARD_SEARCH_BDD);
         }
+
+        #region Manh Toan's algorithms
+
+        private BidirectionalGraph<ConfigurationBase, TaggedEdge<ConfigurationBase, string>> completeGraph;
+
+        protected void BuildCompleteGraph()
+        {
+            this.completeGraph = new BidirectionalGraph<ConfigurationBase, TaggedEdge<ConfigurationBase, string>>();
+
+            Stack<ConfigurationBase> searchStack = new Stack<ConfigurationBase>();
+            searchStack.Push(this.InitialStep);
+
+            while (searchStack.Count > 0)
+            {
+                if (completeGraph.VertexCount > Classes.Ultility.Ultility.SIMULATION_BOUND)
+                {
+                    return;
+                }
+
+                if (CancelRequested)
+                {
+                    return;
+                }
+
+                ConfigurationBase currentStep = searchStack.Pop();
+
+                List<ConfigurationBase> list = this.MakeOneMove(currentStep);
+
+                foreach (ConfigurationBase step in list)
+                {
+                    if (this.completeGraph.ContainsVertex(step))
+                    {
+                        TaggedEdge<ConfigurationBase, string> edge = null;
+                        foreach (TaggedEdge<ConfigurationBase, string> outEdge in completeGraph.OutEdges(currentStep))
+                        {
+                            if (outEdge.Tag == step.Event)
+                            {
+                                //duplicate edge is found
+                                edge = outEdge;
+                                break;
+                            }
+                        }
+
+                        if (edge == null)
+                        {
+                            edge = new TaggedEdge<ConfigurationBase, string>(currentStep, step, step.Event);
+                            this.completeGraph.AddEdge(edge);
+                        }
+                    }
+                    else
+                    {
+                        TaggedEdge<ConfigurationBase, string> edge = new TaggedEdge<ConfigurationBase, string>(currentStep, step, step.Event);
+                        this.completeGraph.AddVerticesAndEdge(edge);
+                        //this.completeGraph.AddVertex(step);
+                        searchStack.Push(step);
+                    }
+                }
+            }
+        }
+
+        private List<ConfigurationBase> MakeOneMove(ConfigurationBase currentStep)
+        {
+            List<ConfigurationBase> listResult = new List<ConfigurationBase>();
+            IEnumerable<ConfigurationBase> list = currentStep.MakeOneMove();
+
+            foreach (ConfigurationBase step in list)
+            {
+                bool contains = false;
+                foreach (ConfigurationBase dest in listResult)
+                {
+                    if (dest.Event == step.Event)
+                    {
+                        contains = true;
+                        break;
+                    }
+                }
+
+                //duplicated steps should not be added in.
+                if (!contains)
+                {
+                    listResult.Add(step);
+                }
+            }
+
+            return listResult;
+        }
+
+        #endregion
     }
 }

@@ -59,12 +59,6 @@
     <Reference Include="Antlr3.Runtime">
       <HintPath>..\DLL\PAT\Antlr3.Runtime.dll</HintPath>
     </Reference>
-    <Reference Include="SharpSvn">
-      <HintPath>..\packages\SharpSvn.1.9-x64.1.8991.3459.132\lib\net40\SharpSvn.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpSvn.UI">
-      <HintPath>..\packages\SharpSvn.1.9-x64.1.8991.3459.132\lib\net40\SharpSvn.UI.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Web" />
@@ -144,9 +138,6 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PAT.Common\PAT.Common.csproj">

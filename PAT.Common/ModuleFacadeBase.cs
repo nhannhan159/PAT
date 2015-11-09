@@ -35,31 +35,7 @@ namespace PAT.Common
             }
         }
 
-        public virtual void ShowSimulationWindow()
-        {
-            if (Specification != null)
-            {
-                if (Specification.GetProcessNames().Count > 0)
-                {
-                    EventStepSim initialStep =
-                            new EventStepSim(Specification.SimulationInitialization("System"));
-
-                    string initialState = initialStep.StepID;
-
-                    SimulationWorker graphBuilder = new SimulationWorker();
-                    graphBuilder.MyInit(initialStep, initialState);
-                    graphBuilder.BuildCompleteGraph();
-                    Graph graph = graphBuilder.graph;
-                    string abc = "xyz";
-                }
-                else
-                {
-                    MessageBox.Show(Resources.Please_input_at_least_one_runnable_process__process_with_no_parameters__, Common.Utility.Utilities.APPLICATION_NAME, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                }
-            }
-        }
-
-        public virtual void ShowSimulationWindow_o(string tabName)
+        public virtual void ShowSimulationWindow(string tabName)
         {
             if (Specification != null)
             {

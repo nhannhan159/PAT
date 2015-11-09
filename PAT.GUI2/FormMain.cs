@@ -2819,8 +2819,7 @@ namespace PAT.GUI
                     if (GUIUtility.AUTO_SAVE)
                         Save();
 
-                    CurrentModule.ShowSimulationWindow();
-                    //CurrentModule.ShowSimulationWindow(this.CurrentEditorTabItem.TabText.TrimEnd('*'));
+                    CurrentModule.ShowSimulationWindow(this.CurrentEditorTabItem.TabText.TrimEnd('*'));
                 }
             }
             catch (Exception ex)

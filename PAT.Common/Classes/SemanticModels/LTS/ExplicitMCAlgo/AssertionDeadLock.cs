@@ -126,6 +126,8 @@ namespace PAT.Common.Classes.SemanticModels.LTS.Assertion
 
         public void BFSVerification()
         {
+            this.BuildCompleteGraph();
+
             StringHashTable Visited = new StringHashTable(Ultility.Ultility.MC_INITIAL_SIZE);
 
             Queue<ConfigurationBase> working = new Queue<ConfigurationBase>(1024);
