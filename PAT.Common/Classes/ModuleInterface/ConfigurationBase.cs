@@ -54,6 +54,36 @@ namespace PAT.Common.Classes.ModuleInterface
             return GlobalEnv.GetID() == input.GlobalEnv.GetID();
         }
 
+        public override bool Equals(object other)
+        {
+            if (other == null)
+                return false;
+
+            ConfigurationBase other_cast = other as ConfigurationBase;
+            if ((System.Object)other_cast == null)
+                return false;
+
+            return this.GlobalEnv.GetID() == other_cast.GlobalEnv.GetID();
+        }
+
+        public bool Equals(ConfigurationBase other)
+        {
+            if ((object)other == null)
+                return false;
+
+            return this.GlobalEnv.GetID() == other.GlobalEnv.GetID();
+        }
+
+        public override int GetHashCode()
+        {
+            return this.GlobalEnv.GetID().GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return this.GlobalEnv.GetID();
+        }
+
         public virtual string GetDisplayEvent()
         {
             if (string.IsNullOrEmpty(DisplayName))
