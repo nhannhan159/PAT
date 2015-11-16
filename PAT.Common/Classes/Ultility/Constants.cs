@@ -91,6 +91,12 @@
         public const string ENGINE_MTBDD = "MTBDD";
         public const string ENGINE_DCNORM_SEARCH = "First Witness Trace using Diagonal Clock Normalization";
 
+        //Assertion Heuristic Search Engine - Add by M.Toan - 11/11/2015
+        #region Heuristic search engine
+        public const string ENGINE_HEURISTIC_DEPTH_FIRST_SEARCH = "Heuristic search using Depth First Search";
+        public const string ENGINE_HEURISTIC_BREADTH_FIRST_SEARCH = "Heuristic search using Breadth First Search";
+        #endregion
+
         //PAT.TA reachability
         public const string ENGINE_DEPTH_FIRST_SEARCH_ExtraPlusM = "DFS M";
         public const string ENGINE_DEPTH_FIRST_SEARCH_ExtraPlusLU = "DFS LU";

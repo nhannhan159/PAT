@@ -41,9 +41,17 @@ namespace PAT.Common.Classes.SemanticModels.LTS.Assertion
             {
                 DFSVerification(); 
             }
-            else
+            else if (SelectedEngineName == Constants.ENGINE_BREADTH_FIRST_SEARCH)
             {
                 BFSVerification();
+            }
+            else if (SelectedEngineName == Constants.ENGINE_HEURISTIC_DEPTH_FIRST_SEARCH)
+            {
+
+            }
+            else if (SelectedEngineName == Constants.ENGINE_HEURISTIC_BREADTH_FIRST_SEARCH)
+            {
+
             }
         }
 
@@ -135,6 +143,8 @@ namespace PAT.Common.Classes.SemanticModels.LTS.Assertion
 
             Visited.Add(InitialStep.GetID());
 
+            string test = InitialStep.GetID();
+
             working.Enqueue(InitialStep);
             List<ConfigurationBase> path = new List<ConfigurationBase>();
             path.Add(InitialStep);
@@ -194,6 +204,11 @@ namespace PAT.Common.Classes.SemanticModels.LTS.Assertion
             }
 
             VerificationOutput.NoOfStates = Visited.Count;
+        }
+
+        public void BFSHeuristicVerification()
+        {
+
         }
 
         public override string GetResultString()

@@ -372,8 +372,6 @@ namespace PAT.Common.Classes.ModuleInterface
             List<string> DeadlockEngine = new List<string>();
             DeadlockEngine.Add(Constants.ENGINE_DEPTH_FIRST_SEARCH);
             DeadlockEngine.Add(Constants.ENGINE_BREADTH_FIRST_SEARCH);
-            DeadlockEngine.Add(Constants.ENGINE_HEURISTIC_DEPTH_FIRST_SEARCH);
-            DeadlockEngine.Add(Constants.ENGINE_HEURISTIC_BREADTH_FIRST_SEARCH);
             ModelCheckingOptions.AddAddimissibleBehavior(Constants.COMPLETE_BEHAVIOR, DeadlockEngine);
         }
 

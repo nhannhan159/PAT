@@ -49,6 +49,8 @@ namespace PAT.Common.Classes.ModuleInterface
             return EvaluatorDenotational.Evaluate(expression, GlobalEnv);
         }
 
+        // Add by M.Toan - 09/11/2015
+        # region Add By M.Toan - 09/11/2015
         public bool EqualsV(ConfigurationBase input)
         {
             return GlobalEnv.GetID() == input.GlobalEnv.GetID();
@@ -83,6 +85,7 @@ namespace PAT.Common.Classes.ModuleInterface
         {
             return this.GlobalEnv.GetID();
         }
+        #endregion
 
         public virtual string GetDisplayEvent()
         {
