@@ -737,11 +737,11 @@ namespace PAT.Common.Classes.ModuleInterface
 
         #region Manh Toan's algorithms
 
-        private BidirectionalGraph<ConfigurationBase, TaggedEdge<ConfigurationBase, string>> completeGraph;
+        //private BidirectionalGraph<ConfigurationBase, TaggedEdge<ConfigurationBase, string>> completeGraph;
 
-        protected void BuildCompleteGraph()
+        protected BidirectionalGraph<ConfigurationBase, TaggedEdge<ConfigurationBase, string>> BuildCompleteGraph()
         {
-            this.completeGraph = new BidirectionalGraph<ConfigurationBase, TaggedEdge<ConfigurationBase, string>>();
+            BidirectionalGraph<ConfigurationBase, TaggedEdge<ConfigurationBase, string>> completeGraph = new BidirectionalGraph<ConfigurationBase, TaggedEdge<ConfigurationBase, string>>();
 
             Stack<ConfigurationBase> searchStack = new Stack<ConfigurationBase>();
             searchStack.Push(this.InitialStep);
@@ -750,12 +750,12 @@ namespace PAT.Common.Classes.ModuleInterface
             {
                 if (completeGraph.VertexCount > Classes.Ultility.Ultility.SIMULATION_BOUND)
                 {
-                    return;
+                    return completeGraph;
                 }
 
                 if (CancelRequested)
                 {
-                    return;
+                    return completeGraph;
                 }
 
                 ConfigurationBase currentStep = searchStack.Pop();
@@ -764,7 +764,7 @@ namespace PAT.Common.Classes.ModuleInterface
 
                 foreach (ConfigurationBase step in list)
                 {
-                    if (this.completeGraph.ContainsVertex(step))
+                    if (completeGraph.ContainsVertex(step))
                     {
                         TaggedEdge<ConfigurationBase, string> edge = null;
                         foreach (TaggedEdge<ConfigurationBase, string> outEdge in completeGraph.OutEdges(currentStep))
@@ -780,18 +780,19 @@ namespace PAT.Common.Classes.ModuleInterface
                         if (edge == null)
                         {
                             edge = new TaggedEdge<ConfigurationBase, string>(currentStep, step, step.Event);
-                            this.completeGraph.AddEdge(edge);
+                            completeGraph.AddEdge(edge);
                         }
                     }
                     else
                     {
                         TaggedEdge<ConfigurationBase, string> edge = new TaggedEdge<ConfigurationBase, string>(currentStep, step, step.Event);
-                        this.completeGraph.AddVerticesAndEdge(edge);
+                        completeGraph.AddVerticesAndEdge(edge);
                         //this.completeGraph.AddVertex(step);
                         searchStack.Push(step);
                     }
                 }
             }
+            return completeGraph;
         }
 
         private List<ConfigurationBase> MakeOneMove(ConfigurationBase currentStep)
