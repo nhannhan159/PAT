@@ -39,10 +39,19 @@ namespace PAT.Common.Classes.SemanticModels.LTS.Assertion
         public override void RunVerification()
         {
             BidirectionalGraph<ConfigurationBase, TaggedEdge<ConfigurationBase, string>> completeGraph;
-            completeGraph = this.BuildCompleteGraph();
+            completeGraph = this.BuildCompleteGraph();            
+
+            List<ConfigurationBase> testList = this.retriveVertex(completeGraph);
+            ConfigurationBase congestNode = testList[1];
+
+             //Make time consuming
+            Dictionary<ConfigurationBase, List<int>> heuristicTable = this.generateHeuristicTable(completeGraph, congestNode);
+
+            Dictionary<ConfigurationBase, int> optimizeHeuristicTable = this.optimizeHeuristicTable(heuristicTable);
+
             if (SelectedEngineName == Constants.ENGINE_DEPTH_FIRST_SEARCH)
             {
-                DFSVerification(); 
+                DFSVerification();
             }
             else if (SelectedEngineName == Constants.ENGINE_BREADTH_FIRST_SEARCH)
             {
@@ -53,7 +62,7 @@ namespace PAT.Common.Classes.SemanticModels.LTS.Assertion
             }
             else if (SelectedEngineName == Constants.ENGINE_HEURISTIC_BREADTH_FIRST_SEARCH)
             {
-                BFSHeuristicVerification(completeGraph);
+                BFSHeuristicVerification(completeGraph, optimizeHeuristicTable);
             }
         }
 
@@ -136,7 +145,13 @@ namespace PAT.Common.Classes.SemanticModels.LTS.Assertion
 
         public void BFSVerification()
         {
-            this.BuildCompleteGraph();
+            //BidirectionalGraph<ConfigurationBase, TaggedEdge<ConfigurationBase, string>> completeGraph;
+            //completeGraph = this.BuildCompleteGraph();
+
+            //List<ConfigurationBase> testList = this.retriveVertex(completeGraph);
+            //ConfigurationBase congestNode = testList[1];
+
+            //List<int> listtes = this.caculateDistanceList(testList[0], congestNode, completeGraph);
 
             StringHashTable Visited = new StringHashTable(Ultility.Ultility.MC_INITIAL_SIZE);
 
@@ -144,8 +159,6 @@ namespace PAT.Common.Classes.SemanticModels.LTS.Assertion
             Queue<List<ConfigurationBase>> paths = new Queue<List<ConfigurationBase>>(1024);
 
             Visited.Add(InitialStep.GetID());
-
-            string test = InitialStep.GetID();
 
             working.Enqueue(InitialStep);
             List<ConfigurationBase> path = new List<ConfigurationBase>();
@@ -209,13 +222,14 @@ namespace PAT.Common.Classes.SemanticModels.LTS.Assertion
             VerificationOutput.NoOfStates = Visited.Count;
         }
 
-        public void BFSHeuristicVerification(BidirectionalGraph<ConfigurationBase, TaggedEdge<ConfigurationBase, string>> completeGraph)
+        public void BFSHeuristicVerification(BidirectionalGraph<ConfigurationBase, TaggedEdge<ConfigurationBase, string>> completeGraph, Dictionary<ConfigurationBase, int> optimizeHeuristicTable)
         {
             // Test Caculate Distance
-            List<ConfigurationBase> testList = this.retriveVertex(completeGraph);
-            ConfigurationBase vertex1 = testList[0];
-            ConfigurationBase vertex2 = testList[1];
-            List<int> distanceList = caculateDistanceList(vertex1, vertex2, completeGraph);
+            //List<ConfigurationBase> testList = this.retriveVertex(completeGraph);
+            //ConfigurationBase vertex1 = testList[0];
+            //ConfigurationBase vertex2 = testList[1];
+            //List<int> distanceList = caculateDistanceList(vertex1, vertex2, completeGraph);
+            //Dictionary<ConfigurationBase, List<int>> heuristicTable = this.generateHeuristicTable(completeGraph, vertex2);
 
             StringHashTable Visited = new StringHashTable(Ultility.Ultility.MC_INITIAL_SIZE);
 
@@ -240,12 +254,11 @@ namespace PAT.Common.Classes.SemanticModels.LTS.Assertion
                 ConfigurationBase current = working.Dequeue();
 
                 List<ConfigurationBase> currentPath = paths.Dequeue();
-                //IEnumerable<ConfigurationBase> list = current.MakeOneMove();
-
-                //IEnumerable<ConfigurationBase> list = current.MakeOneMove();
 
                 // Find next step in complete graph
-                IEnumerable<ConfigurationBase> list = findNextStep(current, completeGraph);
+                List<ConfigurationBase> totalList = findNextStep(current, completeGraph);
+
+                IEnumerable<ConfigurationBase> list = evaluationNextStep(totalList, optimizeHeuristicTable);
 
 
                 this.VerificationOutput.Transitions += list.Count();
@@ -318,20 +331,61 @@ namespace PAT.Common.Classes.SemanticModels.LTS.Assertion
             return list;
         }
 
-        private IEnumerable<ConfigurationBase> findNextStep(ConfigurationBase current, BidirectionalGraph<ConfigurationBase, TaggedEdge<ConfigurationBase, string>> completeGraph)
+        private List<ConfigurationBase> findNextStep(ConfigurationBase current, BidirectionalGraph<ConfigurationBase, TaggedEdge<ConfigurationBase, string>> completeGraph)
         {
             List<ConfigurationBase> list = new List<ConfigurationBase>();
             foreach(TaggedEdge<ConfigurationBase, string> edge in completeGraph.Edges)
             {
-                   if(edge.Source.GetID() == current.GetID())
-                   {
-                       list.Add(edge.Target);
-                   }
+                if (edge.Source.GetID() == edge.Target.GetID())
+                    continue;
+                else
+                {
+                    if (edge.Source.GetID() == current.GetID())
+                    {
+                        list.Add(edge.Target);
+                    }
+                }
             }
             return list;
         }
 
-        private Dictionary
+        private Dictionary<ConfigurationBase, List<int>> generateHeuristicTable(BidirectionalGraph<ConfigurationBase, TaggedEdge<ConfigurationBase, string>> completeGraph, ConfigurationBase congestionNode)
+        {
+            Dictionary<ConfigurationBase, List<int>> heuristicTable = new Dictionary<ConfigurationBase, List<int>>();
+            foreach(ConfigurationBase vertex in completeGraph.Vertices)
+            {
+                if(vertex.GetID() != congestionNode.GetID())
+                {
+                    List<int> tmpList = this.caculateDistanceList(vertex, congestionNode, completeGraph);
+                    heuristicTable.Add(vertex, tmpList);
+                }
+            }
+            return heuristicTable;
+        }
+
+        private Dictionary<ConfigurationBase, int> optimizeHeuristicTable(Dictionary<ConfigurationBase, List<int>> heuristicTable) 
+        {
+            Dictionary<ConfigurationBase, int> optimizeHeuristicTable = new Dictionary<ConfigurationBase,int>();
+            
+            foreach(KeyValuePair<ConfigurationBase, List<int>> heurtisticLine in heuristicTable)
+            {
+                List<int> tmpList = heurtisticLine.Value;
+                int MIN = 100000;
+                if(tmpList.Count > 0)
+                {
+                    MIN = tmpList[0];
+                }
+                foreach(int value in tmpList)
+                {
+                    if(value < MIN)
+                    {
+                        MIN = value;
+                    }
+                }
+                optimizeHeuristicTable.Add(heurtisticLine.Key, MIN);
+            }
+            return optimizeHeuristicTable;
+        }
 
         private List<int> caculateDistanceList(ConfigurationBase start, ConfigurationBase destination, BidirectionalGraph<ConfigurationBase, TaggedEdge<ConfigurationBase, string>> completeGraph)
         {
@@ -372,9 +426,48 @@ namespace PAT.Common.Classes.SemanticModels.LTS.Assertion
             List<int> distanceList = new List<int>();
             foreach(List<ConfigurationBase> path in paths)
             {
-                distanceList.Add(path.Count - 1);
+                int tmpInt = path.Count - 1;
+                distanceList.Add(tmpInt);
             }
             return distanceList;
+        }
+
+        private IEnumerable<ConfigurationBase> evaluationNextStep(List<ConfigurationBase> allNextStep, Dictionary<ConfigurationBase, int> optimizeHeuristicTable)
+        {
+            List<ConfigurationBase> nextSteps = new List<ConfigurationBase>();
+
+            int MIN = 100000;
+
+            // Set initial MIN
+            if (optimizeHeuristicTable.ContainsKey(allNextStep[0]))
+            {
+                MIN = optimizeHeuristicTable[allNextStep[0]];
+            }
+
+            // Find vertex have smallest path
+            foreach(ConfigurationBase nextStep in allNextStep)
+            {
+                int value = 100000;
+                if(optimizeHeuristicTable.ContainsKey(nextStep))
+                {
+                    value = optimizeHeuristicTable[nextStep];
+                }
+                if(value < MIN)
+                {
+                    MIN = value;
+                }
+            }
+
+            // Add to IENumrable List nextSteps
+            foreach(KeyValuePair<ConfigurationBase, int> heuristicLine in optimizeHeuristicTable)
+            {
+                if(heuristicLine.Value == MIN)
+                {
+                    nextSteps.Add(heuristicLine.Key);
+                    break;
+                }
+            }
+            return nextSteps;
         }
 
         private bool checkNodeExistInList(ConfigurationBase node, List<ConfigurationBase> nodeList)

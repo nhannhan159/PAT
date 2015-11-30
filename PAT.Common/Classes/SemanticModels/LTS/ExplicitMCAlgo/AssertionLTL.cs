@@ -7,6 +7,7 @@ using PAT.Common.Classes.BA;
 using PAT.Common.Classes.DataStructure;
 using PAT.Common.Classes.ModuleInterface;
 using PAT.Common.Classes.Ultility;
+using QuickGraph;
 
 namespace PAT.Common.Classes.SemanticModels.LTS.Assertion
 {
@@ -67,6 +68,7 @@ namespace PAT.Common.Classes.SemanticModels.LTS.Assertion
             {
                 LTLEngine.Add(Constants.ENGINE_DEPTH_FIRST_SEARCH);
                 LTLEngine.Add(Constants.ENGINE_BREADTH_FIRST_SEARCH);
+                LTLEngine.Add(Constants.ENGINE_HEURISTIC_BREADTH_FIRST_SEARCH);
                 ModelCheckingOptions.AddAddimissibleBehavior(Constants.COMPLETE_BEHAVIOR, LTLEngine);
             }
             else
@@ -206,6 +208,21 @@ namespace PAT.Common.Classes.SemanticModels.LTS.Assertion
                             break;
                         case Constants.ENGINE_BREADTH_FIRST_SEARCH:
                             BFSVerification();
+                            break;
+                        case Constants.ENGINE_HEURISTIC_BREADTH_FIRST_SEARCH:
+                            BidirectionalGraph<ConfigurationBase, TaggedEdge<ConfigurationBase, string>> completeGraph;
+                            completeGraph = this.BuildCompleteGraph();
+
+                            List<ConfigurationBase> testList = this.retriveVertex(completeGraph);
+                            ConfigurationBase congestNode = testList[1];
+
+                            //Make time consuming
+                            Dictionary<ConfigurationBase, List<int>> heuristicTable = this.generateHeuristicTable(completeGraph, congestNode);
+
+                            Dictionary<ConfigurationBase, int> optimizeHeuristicTable = this.optimizeHeuristicTable(heuristicTable);
+
+                            BFSHeuristicVerification(completeGraph, optimizeHeuristicTable);
+
                             break;
                         case Constants.ENGINE_SCC_BASED_SEARCH:
 
