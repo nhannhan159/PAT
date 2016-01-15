@@ -61,5 +61,18 @@ namespace PAT.PN.LTS
             else
                 ValuationToken.Add(id, value);
         }
+
+        public int HVal(Expression exp)
+        {
+            PrimitiveApplication pa = exp as PrimitiveApplication;
+            foreach (StringDictionaryEntryWithKey<ExpressionValue> expVal in Variables._entries)
+            {
+                if ("P3".Equals(expVal.Key))
+                {
+                    return (expVal.Value as IntConstant).Value;
+                }
+            }
+            return -1;
+        }
     }
 }

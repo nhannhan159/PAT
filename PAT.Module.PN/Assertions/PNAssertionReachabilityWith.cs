@@ -40,7 +40,7 @@ namespace PAT.PN.Assertions{
             varList.AddRange(ReachableStateCondition.GetVars());
             varList.AddRange(ConstraintCondition.GetVars());                        
 
-            Valuation GlobalEnv = Spec.SpecValuation.GetVariableChannelClone(varList, Process.GetChannels());
+            PNValuation GlobalEnv = Spec.SpecValuation.GetVariableChannelClone(varList, Process.GetChannels()) as PNValuation;
             
             //Initialize InitialStep
             InitialStep = new PNConfiguration(Process, Constants.INITIAL_EVENT, null, GlobalEnv, false);
