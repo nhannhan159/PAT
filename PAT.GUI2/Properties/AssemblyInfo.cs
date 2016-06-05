@@ -41,6 +41,6 @@ using System.Resources;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 
-[assembly: AssemblyVersion("03.00.10.23755")]
-[assembly: AssemblyFileVersion("03.10.00.23755")]
+[assembly: AssemblyVersion("03.00.10.23757")]
+[assembly: AssemblyFileVersion("03.10.00.23757")]
 [assembly: NeutralResourcesLanguageAttribute("vi-VN")]

@@ -1,15 +1,16 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("PAT.Common")]
-[assembly: AssemblyDescription("PAT stands for Process Analysis Toolkit, which is an enhanced simulator and model checker for extended process algebra. The main features of PAT include fast verification of systems with fairness constraints, bounded model checking, failure and divergence refinement and various optimizations techniques.")]
+[assembly: AssemblyTitle("PAT.Console")]
+[assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Semantic Engineering Pte. Ltd.")]
-[assembly: AssemblyProduct("PAT - An Enhanced Simulation and Model Checking Tool")]
-[assembly: AssemblyCopyright("Copyright © Semantic Engineering Pte. Ltd. 2013")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("PAT.Console")]
+[assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -19,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("826032d0-18a4-4950-8699-abb824c7dbe1")]
+[assembly: Guid("b96851c5-1868-416d-aba1-1ddbfa83d415")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -30,6 +31,6 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
-
-[assembly: AssemblyVersion("3.5.0.21843")]
-[assembly: AssemblyFileVersion("3.5.0.21843")]
+// [assembly: AssemblyVersion("1.0.*")]
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]

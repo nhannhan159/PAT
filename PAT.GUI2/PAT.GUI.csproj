@@ -13,8 +13,8 @@
     <ApplicationIcon>
     </ApplicationIcon>
     <IsWebBootstrapper>false</IsWebBootstrapper>
-    <ManifestCertificateThumbprint>513E8F1BC2C264C2FCC3F9C914C2223917A407BD</ManifestCertificateThumbprint>
-    <ManifestKeyFile>PAT.GUI_1_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestCertificateThumbprint>70542AAEC315AC1AB90E239FEFF48D9642B8FC41</ManifestCertificateThumbprint>
+    <ManifestKeyFile>PAT.GUI_2_TemporaryKey.pfx</ManifestKeyFile>
     <GenerateManifests>true</GenerateManifests>
     <SignManifests>true</SignManifests>
     <FileUpgradeFlags>
@@ -234,6 +234,7 @@
     <Content Include="SVModule\Resources\zoom_in.png" />
     <Content Include="SVModule\Resources\zoom_out.png" />
     <None Include="PAT.GUI_1_TemporaryKey.pfx" />
+    <None Include="PAT.GUI_2_TemporaryKey.pfx" />
     <None Include="Resources\braodcast_mode.png" />
     <None Include="Resources\broadcast_mode.png" />
     <Content Include="Resources\configuration.png" />
