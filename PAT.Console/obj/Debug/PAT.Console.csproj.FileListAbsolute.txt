@@ -1,0 +1,43 @@
+E:\Projects\PAT\PAT.Console\bin\Debug\PAT.Console.exe.config
+E:\Projects\PAT\PAT.Console\obj\Debug\PAT.Console.csprojResolveAssemblyReference.cache
+E:\Projects\PAT\PAT.Console\bin\Debug\Syntax.xshd
+E:\Projects\PAT\PAT.Console\bin\Debug\Docs\pat.sty
+E:\Projects\PAT\PAT.Console\bin\Debug\Examples\UML Examples\ATM.xmi
+E:\Projects\PAT\PAT.Console\bin\Debug\Examples\UML Examples\basic.xmi
+E:\Projects\PAT\PAT.Console\bin\Debug\Examples\UML Examples\fork&Join.xmi
+E:\Projects\PAT\PAT.Console\bin\Debug\Examples\UML Examples\orthogonal.xmi
+E:\Projects\PAT\PAT.Console\bin\Debug\PAT.Console.exe
+E:\Projects\PAT\PAT.Console\bin\Debug\PAT.Console.pdb
+E:\Projects\PAT\PAT.Console\bin\Debug\KWSN Tool.exe
+E:\Projects\PAT\PAT.Console\bin\Debug\PAT.Common.dll
+E:\Projects\PAT\PAT.Console\bin\Debug\PAT.Editor.dll
+E:\Projects\PAT\PAT.Console\bin\Debug\PAT.Module.KWSN.dll
+E:\Projects\PAT\PAT.Console\bin\Debug\PAT.Module.PN.dll
+E:\Projects\PAT\PAT.Console\bin\Debug\Microsoft.VisualStudio.TextTemplating.dll
+E:\Projects\PAT\PAT.Console\bin\Debug\Antlr3.Runtime.dll
+E:\Projects\PAT\PAT.Console\bin\Debug\PAT.Editor.Docking.dll
+E:\Projects\PAT\PAT.Console\bin\Debug\Microsoft.Msagl.GraphViewerGdi.dll
+E:\Projects\PAT\PAT.Console\bin\Debug\Microsoft.Msagl.Drawing.dll
+E:\Projects\PAT\PAT.Console\bin\Debug\QuickGraph.dll
+E:\Projects\PAT\PAT.Console\bin\Debug\PAT.Editor.Core.dll
+E:\Projects\PAT\PAT.Console\bin\Debug\Interop.Microsoft.Office.Interop.Excel.dll
+E:\Projects\PAT\PAT.Console\bin\Debug\Microsoft.Msagl.dll
+E:\Projects\PAT\PAT.Console\bin\Debug\PAT.Common.pdb
+E:\Projects\PAT\PAT.Console\bin\Debug\KWSN Tool.pdb
+E:\Projects\PAT\PAT.Console\bin\Debug\PAT.Module.KWSN.pdb
+E:\Projects\PAT\PAT.Console\bin\Debug\PAT.Module.PN.pdb
+E:\Projects\PAT\PAT.Console\bin\Debug\QuickGraph.xml
+E:\Projects\PAT\PAT.Console\bin\Debug\de\PAT.Common.resources.dll
+E:\Projects\PAT\PAT.Console\bin\Debug\ja\PAT.Common.resources.dll
+E:\Projects\PAT\PAT.Console\bin\Debug\ko\PAT.Common.resources.dll
+E:\Projects\PAT\PAT.Console\bin\Debug\vi\PAT.Common.resources.dll
+E:\Projects\PAT\PAT.Console\bin\Debug\zh-CHS\PAT.Common.resources.dll
+E:\Projects\PAT\PAT.Console\bin\Debug\zh-CHT\PAT.Common.resources.dll
+E:\Projects\PAT\PAT.Console\bin\Debug\de\KWSN Tool.resources.dll
+E:\Projects\PAT\PAT.Console\bin\Debug\ja\KWSN Tool.resources.dll
+E:\Projects\PAT\PAT.Console\bin\Debug\ko\KWSN Tool.resources.dll
+E:\Projects\PAT\PAT.Console\bin\Debug\vi\KWSN Tool.resources.dll
+E:\Projects\PAT\PAT.Console\bin\Debug\zh-CHS\KWSN Tool.resources.dll
+E:\Projects\PAT\PAT.Console\bin\Debug\zh-CHT\KWSN Tool.resources.dll
+E:\Projects\PAT\PAT.Console\obj\Debug\PAT.Console.exe
+E:\Projects\PAT\PAT.Console\obj\Debug\PAT.Console.pdb

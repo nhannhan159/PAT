@@ -1,0 +1,218 @@
+<PN>
+  <Declaration>#import "PAT.Lib.Utils";
+
+
+#define S_MAX_BUFFER  50;
+#define S_MAX_QUEUE  50;
+#define C_MAX_BUFFER  50;
+var util = new PATUtils();
+var pkg = 10;
+
+// For debug testing
+var testMode = 1;
+
+//Configure for sensor 1
+var b1 = 0;
+var q1 = 0;
+var sbr1 = 10;
+var sqr1 = 10;
+
+//Configure for sensor 2
+var b2 = 0;
+var q2 = 0;
+var sbr2 = 10;
+var sqr2 = 10;
+
+//Configure for channel 1_2
+var b1_2 = 0;
+var r1_2 = 10;
+
+System = Network_1();
+
+// Sensor check
+
+
+// Channel check
+#assert System |= []!(Congestion1_2);
+
+#assert System deadlockfree;
+  </Declaration>
+  <Models>
+    <Model Name="Network_1" Parameter="" Zoom="1" PlaceCounter="0" TransitionCounter="0">
+      <Topology ID="636010224618832232" NumberOfSensors="0" NumberOfPackets="10" AvgBufferSensor="50" Mode="BROADCAST" AbstractedLevel="11">
+        <Sensor Name="Sensor 1" Init="True" SType="1" id="1" MaxSendingRate="10" MaxProcessingRate="10" CGNLevel="0" SizeOfBuffer="9999">
+          <Position X="1" Y="1" Width="0.2" />
+          <Label>
+            <Position X="0.9" Y="1.25" Width="0.6" />
+          </Label>
+        </Sensor>
+        <Sensor Name="Sensor 2" Init="False" SType="2" id="2" MaxSendingRate="10" MaxProcessingRate="10" CGNLevel="0" SizeOfBuffer="9999">
+          <Position X="2.5" Y="1.08" Width="0.2" />
+          <Label>
+            <Position X="2.4" Y="1.33" Width="0.6219791" />
+          </Label>
+        </Sensor>
+        <Link LType="Real" CType="2" MaxSendingRate="10" CGNLevel="0" id="1_2" SizeOfBuffer="9999">
+          <From>Sensor 1</From>
+          <To>Sensor 2</To>
+          <Select />
+          <Event />
+          <ClockGuard />
+          <Guard />
+          <Program />
+          <ClockReset />
+          <Label>
+            <Position X="1.85" Y="0.95" Width="0.25" />
+          </Label>
+        </Link>
+      </Topology>
+      <Places>
+        <Place Name="Output1" NumOfToken="0" Capacity="0" id="1">
+          <Position X="2.9" Y="0.3" Width="0.2" />
+          <Label>
+            <Position X="2.8" Y="0.55" Width="0.6" />
+          </Label>
+          <Guard>
+          </Guard>
+        </Place>
+        <Place Name="Main1" NumOfToken="1" Capacity="0" id="1">
+          <Position X="0.8" Y="0.3" Width="0.2" />
+          <Label>
+            <Position X="0.7" Y="0.55" Width="0.4" />
+          </Label>
+          <Guard>
+          </Guard>
+        </Place>
+        <Place Name="Main1_2" NumOfToken="0" Capacity="0" id="1_2">
+          <Position X="2.875" Y="0.5000001" Width="0.2" />
+          <Label>
+            <Position X="2.775" Y="0.7499998" Width="0.6" />
+          </Label>
+          <Guard>
+          </Guard>
+        </Place>
+        <Place Name="Input2" NumOfToken="1" Capacity="0" id="2">
+          <Position X="4.85" Y="0.5000001" Width="0.2" />
+          <Label>
+            <Position X="4.75" Y="0.7499998" Width="0.4" />
+          </Label>
+          <Guard>
+          </Guard>
+        </Place>
+      </Places>
+      <Transitions>
+        <Transition Name="Send1" id="1">
+          <Position X="1.8" Y="0.3" Width="0.2" />
+          <Label>
+            <Position X="1.7" Y="0.55" Width="0.5" />
+          </Label>
+          <Guard>pkg &amp;gt; 0</Guard>
+          <Program>var sub;
+
+if (pkg &gt; 0) {
+	sub = util.getMin(sqr1, pkg);
+	b1_2 = b1_2 + sub;
+	if (testMode == 0)
+		b1_2 = b1_2 + util.getRandInt(1, sub);
+	pkg = pkg - sub;
+}</Program>
+        </Transition>
+        <Transition Name="Congestion1_2" id="1_2">
+          <Position X="3.675" Y="1.199999" Width="0.2" />
+          <Label>
+            <Position X="3.575" Y="1.449999" Width="1" />
+          </Label>
+          <Guard>b1_2 &amp;gt; C_MAX_BUFFER</Guard>
+          <Program>
+          </Program>
+        </Transition>
+        <Transition Name="Send1_2" id="1_2">
+          <Position X="3.975" Y="0.5000001" Width="0.2" />
+          <Label>
+            <Position X="3.875" Y="0.7499998" Width="0.6" />
+          </Label>
+          <Guard>b1_2 &amp;gt; 0 &amp;amp;&amp;amp; b1_2 &amp;lt;= C_MAX_BUFFER</Guard>
+          <Program>var sub = util.getMin(b1_2, r1_2);
+if (testMode == 0)
+	sub = util.getRandInt(1, sub);
+b2 = b2 + sub;
+b1_2 = b1_2 - sub;
+if (b1_2 &gt; 0)
+	Main1_2 = 1;</Program>
+        </Transition>
+        <Transition Name="Receive2" id="2">
+          <Position X="5.95" Y="0.5000001" Width="0.2" />
+          <Label>
+            <Position X="5.85" Y="0.7499998" Width="0.6" />
+          </Label>
+          <Guard>
+          </Guard>
+          <Program>q2 = q2 + b2;
+b2 = 0;</Program>
+        </Transition>
+        <Transition Name="BroadCasting_1" id="">
+          <Position X="2.8875" Y="0.4000001" Width="0.2" />
+          <Label>
+            <Position X="2.7875" Y="0.6200001" Width="1.1" />
+          </Label>
+          <Guard>
+          </Guard>
+          <Program>
+          </Program>
+        </Transition>
+      </Transitions>
+      <Arcs>
+        <Arc From="Main1" To="Send1" Weight="1">
+          <Label>
+            <Position X="1.3" Y="0.2" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Send1" To="Main1" Weight="1">
+          <Label>
+            <Position X="1.3" Y="0.2" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Send1" To="Output1" Weight="1">
+          <Label>
+            <Position X="2.4" Y="0.2" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Main1_2" To="Send1_2" Weight="1">
+          <Label>
+            <Position X="3.475" Y="0.5000001" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Main1_2" To="Congestion1_2" Weight="1">
+          <Label>
+            <Position X="3.375" Y="0.9" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Input2" To="Receive2" Weight="1">
+          <Label>
+            <Position X="5.45" Y="0.4000001" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Receive2" To="Input2" Weight="1">
+          <Label>
+            <Position X="5.45" Y="0.6000001" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Send1_2" To="Input2" Weight="1">
+          <Label>
+            <Position X="4.4125" Y="0.5000001" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="Output1" To="BroadCasting_1" Weight="1">
+          <Label>
+            <Position X="0" Y="0" Width="0.25" />
+          </Label>
+        </Arc>
+        <Arc From="BroadCasting_1" To="Main1_2" Weight="1">
+          <Label>
+            <Position X="0" Y="0" Width="0.25" />
+          </Label>
+        </Arc>
+      </Arcs>
+    </Model>
+  </Models>
+</PN>

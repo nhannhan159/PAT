@@ -220,7 +220,9 @@ namespace PAT.Common.GUI.ModelChecker
                         MessageBox.Show(Resources.Please_select_an_assertion_first, Common.Utility.Utilities.APPLICATION_NAME, MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return;
                     }
-
+                    MessageBox.Show(VerificationIndex.ToString(), Common.Utility.Utilities.APPLICATION_NAME, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(ListView_Assertions.SelectedItems[VerificationIndex].ToString(), Common.Utility.Utilities.APPLICATION_NAME, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(NumericUpDown_TimeOut.Value.ToString(), Common.Utility.Utilities.APPLICATION_NAME, MessageBoxButtons.OK, MessageBoxIcon.Error);
                     VerificationIndex = 0;
                     mSpecWorker.startVerification(
                         ListView_Assertions.SelectedItems[VerificationIndex].SubItems[2].Text,

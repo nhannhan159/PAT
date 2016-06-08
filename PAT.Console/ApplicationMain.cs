@@ -14,146 +14,75 @@ namespace PAT.Console
     class ApplicationMain
     {
         private ModuleFacadeBase CurrentModule;
-        public SpecificationBase Specification;
+        private SpecificationBase Specification;
+        private SpecificationWorker SpecWorker;
 
-        public void readFile(string filename)
+        private string ModuleName;
+        private string Text;
+        private string FileName;
+
+        public ApplicationMain(string fileName)
         {
-            EditorTabItem ret = null;
-
-            do
-            {
-                int N = DockContainer.Documents.Length;
-                for (int i = 0; i < N; i++)
-                {
-                    EditorTabItem item = DockContainer.Documents[i] as EditorTabItem;
-                    if (item == null)
-                        continue;
-
-                    if (item.FileName == filename || (!Common.Utility.Utilities.IsWindowsOS && item.FileName.EndsWith(filename)))
-                    {
-                        item.Activate();
-                        CurrentActiveTab = item;
-                        SetAllFileNameLabel(filename);
-                        ret = item;
-                        break;
-                    }
-                }
-
-                if (ret != null) // Get Item success
-                    break;
-
-                if (File.Exists(filename) == false)
-                {
-                    if (ShowMessageBox)
-                    {
-                        MessageBox.Show(Resources.Open_Error__the_selected_file_is_not_found_,
-                            Utilities.APPLICATION_NAME, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                    break;
-                }
-
-                try
-                {
-                    SyntaxMode ModuleSyntax = null;
-                    foreach (SyntaxMode syntax in Languages)
-                    {
-                        foreach (string extension in syntax.Extensions)
-                        {
-                            if (filename.ToLower().EndsWith(extension))
-                            {
-                                ModuleSyntax = syntax;
-                                break;
-                            }
-                        }
-
-                        if (ModuleSyntax != null)
-                            break;
-                    }
-
-                    if (ModuleSyntax == null)
-                    {
-                        if (ShowMessageBox)
-                            MessageBox.Show(Resources.Error_happened_in_opening_ + filename + ".\r\n" + Resources.File_format_is_not_supported_by_PAT_, Common.Utility.Utilities.APPLICATION_NAME, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        break;
-                    }
-
-                    try
-                    {
-                        OpenFilter = "";
-                        foreach (SyntaxMode syntax in Languages)
-                        {
-                            if (ModuleSyntax.Name == syntax.Name)
-                                OpenFilter = syntax.Name + " (*" + syntax.ExtensionString + ")|*" + syntax.ExtensionString + "|" + OpenFilter;
-                            else
-                                OpenFilter += syntax.Name + " (*" + syntax.ExtensionString + ")|*" + syntax.ExtensionString + "|";
-                        }
-
-                        OpenFilter += "All File (*.*)|*.*";
-                    }
-                    catch (Exception) { }
-
-                    EditorTabItem tabItem = this.AddDocument(ModuleSyntax.Name);
-                    tabItem.Open(filename);
-                    AddRecent(filename);
-                    SetAllFileNameLabel(filename);
-                    if (tabItem.TabText.EndsWith("*"))
-                        tabItem.TabText = tabItem.TabText.TrimEnd('*');
-                    this.StatusLabel_Status.Text = "Ready";
-                    ret = tabItem;
-                }
-                catch (Exception ex)
-                {
-                    if (ShowMessageBox)
-                    {
-                        MessageBox.Show(Resources.Open_Error_ + ex.Message + "\r\n" + Resources.Please_make_sure_that_the_format_is_correct_,
-                            Utilities.APPLICATION_NAME, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-
-                    DevLog.d(TAG, ex.Message);
-                }
-
-
-            } while (false);
-            return ret;
+            this.FileName = fileName;
+            this.Text = System.IO.File.ReadAllText(this.FileName);
+            this.ModuleName = "PN";
         }
 
         public void startVerify()
         {
-            
+            if (this.LoadModule(this.ModuleName))
+            {
+                this.Specification = ParseSpecification();
+                this.SpecWorker = new SpecificationWorker(this.Specification);
+                this.SpecWorker.startVerification(this.SpecWorker.mSpec.AssertionDatabase.First().Key);
+            } else
+            {
+                System.Console.WriteLine("Error had occur!");
+            }
+        }
+
+        private SpecificationBase ParseSpecification()
+        {
+            SpecificationBase spec = null;
+            try
+            {
+                string moduleName = this.ModuleName;
+                string fileFullName = (new FileInfo(this.FileName)).FullName;
+                spec = CurrentModule.ParseSpecification(this.Text, "", fileFullName);
+                if (spec != null && spec.Errors.Count == 0)
+                    return spec;
+                else
+                    return null;
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine(ex.StackTrace);
+            }
+
+            return null;
         }
 
         private bool LoadModule(string moduleName)
         {
             try
             {
-                if (Common.Utility.Utilities.ModuleDictionary.ContainsKey(moduleName))
-                {
-                    if (CurrentModule == null || moduleName != CurrentModule.ModuleName)
-                    {
-                        CurrentModule = Common.Utility.Utilities.ModuleDictionary[moduleName];
-                    }
-                }
-                else
-                {
-                    string facadeClass = "PAT." + moduleName + ".ModuleFacade";
-                    string file = Path.Combine(Path.Combine(Common.Utility.Utilities.ModuleFolderPath, moduleName), "PAT.Module." + moduleName + ".dll");
+                string facadeClass = "PAT." + moduleName + ".ModuleFacade";
+                string file = (new FileInfo("PAT.Module." + moduleName + ".dll")).FullName;
 
-                    Assembly assembly = Assembly.LoadFrom(file);
-                    CurrentModule = (ModuleFacadeBase)assembly.CreateInstance(
+                Assembly assembly = Assembly.LoadFrom(file);
+                CurrentModule = (ModuleFacadeBase)assembly.CreateInstance(
                                                            facadeClass,
                                                            true,
                                                            BindingFlags.CreateInstance,
                                                            null, null,
                                                            null, null);
 
-                    if (CurrentModule.GetType().Namespace != "PAT." + moduleName)
-                    {
-                        CurrentModule = null;
-                        return false;
-                    }
-
-                    CurrentModule.ReadConfiguration();
+                if (CurrentModule.GetType().Namespace != "PAT." + moduleName)
+                {
+                    CurrentModule = null;
+                    return false;
                 }
+                CurrentModule.ReadConfiguration();
 
                 return true;
             }
@@ -161,5 +90,6 @@ namespace PAT.Console
 
             return false;
         }
+
     }
 }
